@@ -83,7 +83,7 @@ b5,r2,b5,r2,r5,r3,r3,r3,g_r"
             label
             input.Run (fun text -> JS.Alert(sprintf "%A" (parseGame text)))
         ]
-
+        (*
         let summaries = matchSummary foosmatch
 
         let printMatchSummary (MatchSummary(name,
@@ -96,4 +96,4 @@ b5,r2,b5,r2,r5,r3,r3,r3,g_r"
             printfn "Match total: %O\t-\t%O" matchTotal1 matchTotal2
             printfn ""
 
-        summaries |> List.iter printMatchSummary
+        summaries |> List.iter printMatchSummary *)

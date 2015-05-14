@@ -33,7 +33,9 @@
     <WarningLevel>3</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <StartAction>Project</StartAction>
+    <StartAction>Program</StartAction>
+    <StartProgram>c:\Windows\explorer.exe</StartProgram>
+    <StartArguments>"C:\Users\krist_000\Documents\GitHub\FoosStat\FoosStatView\bin\html\index.html"</StartArguments>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Domain.fs" />
