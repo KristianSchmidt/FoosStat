@@ -38,6 +38,7 @@
     <StartArguments>"C:\Users\krist_000\Documents\GitHub\FoosStat\FoosStatView\bin\html\index.html"</StartArguments>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Games.fs" />
     <Compile Include="Domain.fs" />
     <Compile Include="Parser.fs" />
     <Compile Include="Analytics.fs" />

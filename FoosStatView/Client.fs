@@ -7,56 +7,10 @@ open IntelliFactory.WebSharper.Html.Client
 open Domain
 open Parser
 open Analytics
+open Games
 
 [<JavaScript>]
-module Client =
-
-    [<Literal>]
-    let game = @"set 1
-b5,b5,b3,g_b
-r5,r3,r2,b2,g_b
-r5,r3,g_r
-b5,b2,b5,r5,r3,b2,b3,b2,r2,r2,b2,r2,r3,g_r
-b5,b2,b3,r2,b3,g_b
-r5,r3,b2,b2,g_b
-r5,r3,g_r
-b5,r5,b5,g_b
-set 2
-r5,r3,b2,r5,r3,b2,b2,r2,g_r
-b5,b3,r2,b2,r2,r3,r3,g_r
-b5,b5,b3,g_b
-r5,b5,r2,r3,g_r
-b5,b3,g_b
-r5,r3,b2,r5,b5,r5,r3,b2,r2,b2,b2,r2,b2,b3,g_b
-r5,r5,r3,g_r
-b5,b3,g_b
-r5,r3,r3,r5,r3,r2,r2,r2,b2,b5,b3,r2,r2,r2,r2,b2,g_b
-set 3
-r5,r3,g_r
-b5,b5,r5,r3,g_r
-b5,r5,b2,r3,r5,r3,r3,g_r
-b5,b5,b3,r2,r3,b5,b5,b5,b3,r2,r5,r3,b2,r2,b5,r5,r3,b2,r3,b2,r3,b2,b5,b3,g_b
-r5,r3,r2,b2,b5,b5,b3,g_b
-r5,r3,g_r
-b5,b5,b3,r5,b5,r5,r3,b5,b2,b3,r2,r3,g_r
-set 4
-b5,r2,r3,g_r
-b5,b5,r2,b2,b2,r3,g_r
-b5,r5,r3,g_r
-b5,r3,g_r
-b5,r5,r5,r3,r3,r3,b2,r5,r3,g_r
-set 5
-b5,b5,b3,r2,b2,g_b
-r5,r5,b5,r3,r3,g_r
-b5,r2,r3,g_r
-b5,r5,b2,r2,b2,r2,r3,r3,g_r
-b5,b3,r2,r5,b5,r2,r2,b5,b3,b5,b5,r5,b2,g_b
-r5,b5,b2,r5,r3,b2,r5,b5,r5,r3,g_r
-b5,b5,g_b
-r5,b5,b5,r5,r3,b5,b5,b5,b3,g_b
-r5,r3,r3,g_r
-b5,r2,b5,r2,r5,r3,r3,r3,g_r"
-    
+module Client = 
     let Main () =
         (*
         let input = Input [Text ""]
@@ -82,7 +36,7 @@ b5,r2,b5,r2,r5,r3,r3,r3,g_r"
             let header = Tags.THead [ TR [ TH [ Attr.ColSpan "3"; Attr.Align "center" ] -< [ TD [ Text name ] ] ]
                                       TR [ TH [ Text "" ]; TH [ Text "Red" ]; TH [ Text "Blue" ] ] ]
             let bodyElement i (redStat : Stat) (blueStat : Stat) =
-                TR [ TD [ Text (sprintf "Set %i" i) ]; TD [ Text (sprintf "%O" redStat) ]; TD [ Text (sprintf "%O" blueStat) ] ]
+                TR [ TD [ Text (sprintf "Set %i" (i + 1)) ]; TD [ Text (sprintf "%O" redStat) ]; TD [ Text (sprintf "%O" blueStat) ] ]
 
             let body = Tags.TBody ((setTotals1,setTotals2) ||> List.mapi2 bodyElement)
 
