@@ -11,25 +11,7 @@ open Games
 
 [<JavaScript>]
 module Client = 
-    let Main () =
-        (*
-        let input = Input [Text ""]
-        let label = Div [Text ""]
-        let test = Attack
-        
-        let selform = ["Attack", Attack; "Defence", Defence]
-                      |> Controls.Select 0
-        
-        Div [
-            label
-            selform
-        ]*)
-
-        let table = Table [ Tags.THead [ TR [ TH [ Attr.ColSpan "3"; Attr.Align "center" ] -< [ TD [ Text "Goals" ] ] ]
-                                         TR [ TH [ Text "" ]; TH [ Text "Red" ]; TH [ Text "Blue" ] ] ]
-                            Tags.TBody [ TR [ TD [ Text "Set 1" ]; TD [ Text "Set 1" ]; TD [ Text "Set 1" ] ] ] ]
-
-        let matchSummaryToTable (MatchSummary(name,
+    let matchSummaryToTable (MatchSummary(name,
                                               (col1,PlayerSummary(matchTotal1,setTotals1)),
                                               (col2,PlayerSummary(matchTotal2,setTotals2))
                                 )) =
@@ -41,7 +23,8 @@ module Client =
             let body = Tags.TBody ((setTotals1,setTotals2) ||> List.mapi2 bodyElement)
 
             Table [ header; body ]
-        
+
+    let Main () =
         let printMatchSummary (MatchSummary(name,
                                 (col1,PlayerSummary(matchTotal1,setTotals1)),
                                 (col2,PlayerSummary(matchTotal2,setTotals2))
@@ -58,7 +41,7 @@ module Client =
         let input = 
             Controls.ReadOnlyTextArea game
             |> Enhance.WithSubmitButton
-        let label = Text "Rod"
+        
         let textDiv = Div []
         let appendSummary (text : string) =
             textDiv.Clear()
@@ -67,7 +50,6 @@ module Client =
         let mainDiv =
             Div [
                 Attr.Class "main-element"
-                label
                 input.Run (fun text -> appendSummary text)
             ]
         Div [ mainDiv
