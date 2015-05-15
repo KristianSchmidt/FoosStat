@@ -71,6 +71,17 @@ b5,r2,b5,r2,r5,r3,r3,r3,g_r"
             selform
         ]*)
 
+        let printMatchSummary (MatchSummary(name,
+                                (col1,PlayerSummary(matchTotal1,setTotals1)),
+                                (col2,PlayerSummary(matchTotal2,setTotals2))
+                                )) =
+            "..."
+            (*let newLineConcat s1 s2 = s1 + "\r\n" + s2
+            let header = sprintf "%s" name + "\r\n" + (sprintf "%A\t-\t%A" col1 col2)
+            let content = (setTotals1,setTotals2) ||> List.zip |> List.map (fun (s1,s2) -> sprintf "%O\t-\t%O" s1 s2) |> List.reduce newLineConcat
+            let total = sprintf "Match total: %O\t-\t%O" matchTotal1 matchTotal2
+            header + "\r\n" + content + "\r\n" + total*)
+
         let parseGame text =
             Parser.parseGame text |> Seq.map Parser.parseSet |> List.ofSeq |> Match
 
@@ -78,22 +89,17 @@ b5,r2,b5,r2,r5,r3,r3,r3,g_r"
             Controls.ReadOnlyTextArea game
             |> Enhance.WithSubmitButton
         let label = Text "Rod"
-        Div [
-            Attr.Class "main-element"
-            label
-            input.Run (fun text -> JS.Alert(sprintf "%A" (parseGame text)))
-        ]
-        (*
-        let summaries = matchSummary foosmatch
-
-        let printMatchSummary (MatchSummary(name,
-                                (col1,PlayerSummary(matchTotal1,setTotals1)),
-                                (col2,PlayerSummary(matchTotal2,setTotals2))
-                                )) =
-            printfn "%s" name
-            printfn "%A\t-\t%A" col1 col2
-            (setTotals1,setTotals2) ||> List.zip |> List.iter (fun (s1,s2) -> printfn "%O\t-\t%O" s1 s2)
-            printfn "Match total: %O\t-\t%O" matchTotal1 matchTotal2
-            printfn ""
-
-        summaries |> List.iter printMatchSummary *)
+        let textDiv = Div []
+        let appendSummary (text : string) =
+            textDiv.Clear()
+            let summary = parseGame text |> matchSummary
+            textDiv.Append (Text (sprintf "%A" summary))
+            //textDiv.Append (Text (printMatchSummary (List.head summary)))
+        let mainDiv =
+            Div [
+                Attr.Class "main-element"
+                label
+                input.Run (fun text -> appendSummary text)
+            ]
+        Div [ mainDiv
+              textDiv ]
