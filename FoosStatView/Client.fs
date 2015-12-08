@@ -21,8 +21,8 @@ module Client =
                 TR [ TD [ Text (sprintf "Set %i" (i + 1)) ]; TD [ Text (sprintf "%O" redStat) ]; TD [ Text (sprintf "%O" blueStat) ] ]
 
             let body = Tags.TBody ((setTotals1,setTotals2) ||> List.mapi2 bodyElement)
-
-            Table [ header; body ]
+            
+            Table [ Attr.Class "table table-striped table-hover " ] -< [header; body]
 
     let Main () =
         let printMatchSummary (MatchSummary(name,

@@ -3,6 +3,7 @@ namespace FoosStatView
 open IntelliFactory.WebSharper.Html.Server
 open IntelliFactory.WebSharper
 open IntelliFactory.WebSharper.Sitelets
+open IntelliFactory.WebSharper.Resources
 
 type Action =
     | Home
@@ -61,5 +62,9 @@ type Website() =
         member this.Sitelet = Site.Main
         member this.Actions = [Home]
 
+type StyleResource() =
+    inherit BaseResource("bootstrap.css")
+
 [<assembly: Website(typeof<Website>)>]
+[<assembly:Require(typeof<StyleResource>)>]
 do ()

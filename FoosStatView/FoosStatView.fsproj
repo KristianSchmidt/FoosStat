@@ -35,7 +35,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <StartAction>Program</StartAction>
     <StartProgram>c:\Windows\explorer.exe</StartProgram>
-    <StartArguments>"C:\Users\krist_000\Documents\GitHub\FoosStat\FoosStatView\bin\html\index.html"</StartArguments>
+    <StartArguments>"C:\Users\Kristian\Documents\foosstat\FoosStat2\FoosStatView\bin\html\index.html"</StartArguments>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Games.fs" />
@@ -47,6 +47,7 @@
     <None Include="extra.files" />
     <Content Include="Main.html" />
     <None Include="packages.config" />
+    <Content Include="bootstrap.css" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="IntelliFactory.Formlets">
