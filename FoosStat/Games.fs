@@ -1,10 +1,5 @@
-﻿namespace Games
-
-open IntelliFactory.WebSharper
-open IntelliFactory.WebSharper.JavaScript
-[<AutoOpen>]
-[<JavaScript>]
-module Games =
+﻿
+module Games
 
     [<Literal>]
     let game = @"set 1

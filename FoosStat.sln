@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FoosStatView", "FoosStatView\FoosStatView.fsproj", "{D80775E1-A15D-4D83-9EC5-4A681ABE0C04}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FoosStat", "FoosStat\FoosStat.fsproj", "{7BAE6370-BB02-4B51-8B82-F13AB35946E2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{D80775E1-A15D-4D83-9EC5-4A681ABE0C04}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D80775E1-A15D-4D83-9EC5-4A681ABE0C04}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D80775E1-A15D-4D83-9EC5-4A681ABE0C04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BAE6370-BB02-4B51-8B82-F13AB35946E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BAE6370-BB02-4B51-8B82-F13AB35946E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BAE6370-BB02-4B51-8B82-F13AB35946E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BAE6370-BB02-4B51-8B82-F13AB35946E2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

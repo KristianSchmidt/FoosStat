@@ -69,3 +69,4 @@ module Domain =
                                                                                | NumberStat(n1),NumberStat(n2) -> NumberStat(n1+n2)
                                                                                | TryFailStat(suc1,att1),TryFailStat(suc2,att2) -> TryFailStat(suc1+suc2,att1+att2)
                                                                                | _ -> failwith "Type mismatch: Cannot sum different types of stats")
+
