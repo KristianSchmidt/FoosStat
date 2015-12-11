@@ -7,19 +7,9 @@ open Domain
 [<JavaScript>]
 [<AutoOpen>]
 module Analytics =
-    type PlayerSummary = | PlayerSummary of matchTotal : Stat * setTotals : Stat list
+    type PlayerSummary = { MatchTotal : Stat; SetTotals : Stat list }
 
-    type MatchSummary = | MatchSummary of name : string * player1 : (PlayerColor * PlayerSummary) * player2 : (PlayerColor * PlayerSummary)
-
-    let printMatchSummary (MatchSummary(name,
-                            (col1,PlayerSummary(matchTotal1,setTotals1)),
-                            (col2,PlayerSummary(matchTotal2,setTotals2))
-                            )) =
-        let newLineConcat s1 s2 = s1 + "\r\n" + s2
-        let header = sprintf "%s" name + "\r\n" + (sprintf "%A\t-\t%A" col1 col2)
-        let content = (setTotals1,setTotals2) ||> List.zip |> List.map (fun (s1,s2) -> sprintf "%O\t-\t%O" s1 s2) |> List.reduce newLineConcat
-        let total = sprintf "Match total: %O\t-\t%O" matchTotal1 matchTotal2
-        header + "\r\n" + content + "\r\n" + total
+    type MatchSummary = { StatName : string; Red : PlayerSummary; Blue : PlayerSummary }
 
     type MatchStat = | MatchStat of name : string * calculation : (PlayerColor -> Ball -> Stat list)
 
@@ -27,14 +17,14 @@ module Analytics =
         let statPerSet (Set(balls)) = balls |> List.collect f |> Stat.sum
         let setStats = sets |> List.map statPerSet
         let matchTotal = setStats |> Stat.sum
-        PlayerSummary(matchTotal, setStats)
+        { MatchTotal = matchTotal; SetTotals = setStats }
 
     let generateMatchSummary game (MatchStat(name,f)) =
         let redf = f Red
         let bluef = f Blue
         let redSummary = sumStats redf game
         let blueSummary = sumStats bluef game
-        MatchSummary(name,(Red,redSummary),(Blue,blueSummary))
+        { StatName = name; Red = redSummary; Blue = blueSummary }
 
     let pairwiseStat f (ball : Ball) = ball.pairwise |> Seq.map f |> List.ofSeq
 
@@ -79,11 +69,11 @@ module Analytics =
             ball |> pairwiseStat stat
         MatchStat(name, calcFunc)
 
-    let threeBarGoals        = matchStat "Three bar goals/shots"           threeBarInit threeBarSucc genericTryFail
-    let threeBarGoalsRecatch = matchStat "Three bar goals/shots w/recatch" threeBarInit threeBarSucc genericTryFailRecatch
-    let fiveBarPasses        = matchStat "Five bar passes/atts"            midfieldInit midfieldSucc genericTryFail
-    let fiveBarPassesRecatch = matchStat "Five bar passes/atts w/recatch"  midfieldInit midfieldSucc genericTryFailRecatch
-    let twoBarGoals          = matchStat "Two bar goals"                   twoBarGoalInit twoBarGoalSucc genericNumber
+    let threeBarGoals        = matchStat "Three bar goals/shots" threeBarInit threeBarSucc genericTryFail
+    let threeBarGoalsRecatch = matchStat "Three bar goals/poss"  threeBarInit threeBarSucc genericTryFailRecatch
+    let fiveBarPasses        = matchStat "Five bar passes/atts"  midfieldInit midfieldSucc genericTryFail
+    let fiveBarPassesRecatch = matchStat "Five bar passes/poss"  midfieldInit midfieldSucc genericTryFailRecatch
+    let twoBarGoals          = matchStat "Two bar goals"         twoBarGoalInit twoBarGoalSucc genericNumber
 
     let gameStats = [goals; twoBarGoals; threeBarGoals; threeBarGoalsRecatch; fiveBarPasses; fiveBarPassesRecatch]
 
