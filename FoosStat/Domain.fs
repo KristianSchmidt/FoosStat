@@ -56,6 +56,7 @@ module Domain =
         override this.ToString() =
             match this with
             | NumberStat(num) -> sprintf "%i" num
+            | TryFailStat(0,0) -> sprintf "0 / 0 (N/A)"
             | TryFailStat(suc,att) -> sprintf "%i / %i (%.0f %%)" suc att (100.0 * (float)suc / (float)att)
 
         static member (+) (s1, s2) =
