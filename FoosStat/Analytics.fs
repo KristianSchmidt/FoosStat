@@ -11,6 +11,16 @@ module Analytics =
 
     type MatchSummary = | MatchSummary of name : string * player1 : (PlayerColor * PlayerSummary) * player2 : (PlayerColor * PlayerSummary)
 
+    let printMatchSummary (MatchSummary(name,
+                            (col1,PlayerSummary(matchTotal1,setTotals1)),
+                            (col2,PlayerSummary(matchTotal2,setTotals2))
+                            )) =
+        let newLineConcat s1 s2 = s1 + "\r\n" + s2
+        let header = sprintf "%s" name + "\r\n" + (sprintf "%A\t-\t%A" col1 col2)
+        let content = (setTotals1,setTotals2) ||> List.zip |> List.map (fun (s1,s2) -> sprintf "%O\t-\t%O" s1 s2) |> List.reduce newLineConcat
+        let total = sprintf "Match total: %O\t-\t%O" matchTotal1 matchTotal2
+        header + "\r\n" + content + "\r\n" + total
+
     type MatchStat = | MatchStat of name : string * calculation : (PlayerColor -> Ball -> Stat list)
 
     let sumStats (f : Ball -> Stat list) (Match(sets)) =

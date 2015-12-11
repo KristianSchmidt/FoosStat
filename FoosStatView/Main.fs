@@ -47,7 +47,6 @@ module Site =
     let HomePage =
         Skin.WithTemplate "FoosStat" <| fun ctx ->
             [
-                Div [Text "HOME"]
                 Div [new Controls.EntryPoint()]
             ]
 
@@ -66,5 +65,5 @@ type StyleResource() =
     inherit BaseResource("bootstrap.css")
 
 [<assembly: Website(typeof<Website>)>]
-[<assembly:Require(typeof<StyleResource>)>]
+[<assembly: Require(typeof<StyleResource>)>]
 do ()

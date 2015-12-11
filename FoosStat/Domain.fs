@@ -6,7 +6,6 @@ open IntelliFactory.WebSharper.JavaScript
 [<JavaScript>]
 [<AutoOpen>]
 module Domain =
-
     type Team =
         | SingleTeam of string
         | DoubleTeam of string * string
