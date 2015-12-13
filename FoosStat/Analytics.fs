@@ -7,12 +7,6 @@ open Domain
 [<JavaScript>]
 [<AutoOpen>]
 module Analytics =
-    type PlayerSummary = { MatchTotal : Stat; SetTotals : Stat list }
-
-    type MatchSummary = { StatName : string; Red : PlayerSummary; Blue : PlayerSummary }
-
-    type MatchStat = | MatchStat of name : string * calculation : (PlayerColor -> Ball -> Stat list)
-
     let sumStats (f : Ball -> Stat list) (Match(sets)) =
         let statPerSet (Set(balls)) = balls |> List.collect f |> Stat.sum
         let setStats = sets |> List.map statPerSet
