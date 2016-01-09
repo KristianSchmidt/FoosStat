@@ -65,7 +65,10 @@ module Domain =
             | TryFailStat(suc1,att1),TryFailStat(suc2,att2) -> TryFailStat(suc1+suc2,att1+att2)
             | _ -> failwith "Type mismatch: Cannot sum different types of stats"
 
-        static member sum (stats : Stat seq) = stats |> Seq.reduce (+)
+        static member sum (stats : Stat seq) = stats |> Seq.reduce (fun x y -> match (x,y) with
+                                                                               | NumberStat(n1),NumberStat(n2) -> NumberStat(n1+n2)
+                                                                               | TryFailStat(suc1,att1),TryFailStat(suc2,att2) -> TryFailStat(suc1+suc2,att1+att2)
+                                                                               | _ -> failwith "Type mismatch: Cannot sum different types of stats")
 
     type PlayerSummary = { MatchTotal : Stat; SetTotals : Stat list }
 
