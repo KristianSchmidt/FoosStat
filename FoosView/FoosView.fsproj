@@ -114,8 +114,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FoosStat2\FoosStat2.fsproj">
-      <Name>FoosStat2</Name>
+    <ProjectReference Include="..\FoosStat2\FoosStat.fsproj">
+      <Name>FoosStat</Name>
       <Project>{cb1d4258-8f66-412b-ab8c-2046346199a5}</Project>
       <Private>True</Private>
     </ProjectReference>

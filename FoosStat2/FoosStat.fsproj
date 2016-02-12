@@ -28,9 +28,9 @@
   </PropertyGroup>
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <Name>FoosStat2</Name>
+    <Name>FoosStat</Name>
     <RootNamespace>FoosStat2</RootNamespace>
-    <AssemblyName>FoosStat2</AssemblyName>
+    <AssemblyName>FoosStat</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <WarningLevel>3</WarningLevel>
   </PropertyGroup>

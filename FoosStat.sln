@@ -5,7 +5,7 @@ VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FoosView", "FoosView\FoosView.fsproj", "{043F51EE-AD55-4F46-AF5A-9DCD97D915FA}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FoosStat2", "FoosStat2\FoosStat2.fsproj", "{CB1D4258-8F66-412B-AB8C-2046346199A5}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FoosStat", "FoosStat2\FoosStat.fsproj", "{CB1D4258-8F66-412B-AB8C-2046346199A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
