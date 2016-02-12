@@ -3,10 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FoosStatView", "FoosStatView\FoosStatView.fsproj", "{D80775E1-A15D-4D83-9EC5-4A681ABE0C04}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FoosStat", "FoosStat\FoosStat.fsproj", "{7BAE6370-BB02-4B51-8B82-F13AB35946E2}"
-EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FoosView", "FoosView\FoosView.fsproj", "{043F51EE-AD55-4F46-AF5A-9DCD97D915FA}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FoosStat2", "FoosStat2\FoosStat2.fsproj", "{CB1D4258-8F66-412B-AB8C-2046346199A5}"
@@ -17,12 +13,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D80775E1-A15D-4D83-9EC5-4A681ABE0C04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D80775E1-A15D-4D83-9EC5-4A681ABE0C04}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D80775E1-A15D-4D83-9EC5-4A681ABE0C04}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7BAE6370-BB02-4B51-8B82-F13AB35946E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7BAE6370-BB02-4B51-8B82-F13AB35946E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7BAE6370-BB02-4B51-8B82-F13AB35946E2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{043F51EE-AD55-4F46-AF5A-9DCD97D915FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{043F51EE-AD55-4F46-AF5A-9DCD97D915FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{043F51EE-AD55-4F46-AF5A-9DCD97D915FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
