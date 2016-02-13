@@ -11,15 +11,16 @@ module Domain =
         | SingleTeam of string
         | DoubleTeam of string * string
 
+        override this.ToString() = match this with
+                                   | SingleTeam(s) -> s
+                                   | DoubleTeam(s1,s2) -> sprintf "%s/%s" s1 s2
+
     type PlayerColor = 
         | Red
         | Blue
     
         member color.otherColor =
             match color with | Red -> Blue | Blue -> Red
-
-    type MatchTeam =
-        | MatchTeam of Team * PlayerColor
 
     type Rod =
         | Defence
@@ -47,8 +48,7 @@ module Domain =
     type Set =
         | Set of Ball list
 
-    type Match =
-        | Match of Set list
+    type Match = { Sets : Set list; Red : Team; Blue : Team }
 
     type Stat =
         | NumberStat of num : int
@@ -73,6 +73,6 @@ module Domain =
 
     type PlayerSummary = { MatchTotal : Stat; SetTotals : Stat list }
 
-    type MatchSummary = { StatName : string; Red : PlayerSummary; Blue : PlayerSummary }
+    type MatchSummary = { StatName : string; RedTeam : Team; BlueTeam : Team; Red : PlayerSummary; Blue : PlayerSummary }
 
     type MatchStat = | MatchStat of name : string * calculation : (PlayerColor -> Ball -> Stat list)

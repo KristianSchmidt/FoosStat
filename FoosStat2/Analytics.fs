@@ -7,9 +7,9 @@ open Domain
 [<JavaScript>]
 [<AutoOpen>]
 module Analytics =
-    let sumStats (f : Ball -> Stat list) (Match(sets)) =
+    let sumStats (f : Ball -> Stat list) game =
         let statPerSet (Set(balls)) = balls |> List.collect f |> Stat.sum
-        let setStats = sets |> List.map statPerSet
+        let setStats = game.Sets |> List.map statPerSet
         let matchTotal = setStats |> Stat.sum
         { MatchTotal = matchTotal; SetTotals = setStats }
 
@@ -18,7 +18,7 @@ module Analytics =
         let bluef = f Blue
         let redSummary = sumStats redf game
         let blueSummary = sumStats bluef game
-        { StatName = name; Red = redSummary; Blue = blueSummary }
+        { StatName = name; RedTeam = game.Red; BlueTeam = game.Blue; Red = redSummary; Blue = blueSummary }
 
     let pairwiseStat f (ball : Ball) = ball.pairwise |> Seq.map f |> List.ofSeq
 

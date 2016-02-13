@@ -6,13 +6,12 @@ open WebSharper.Html.Client
 open Domain
 open Parser
 open Analytics
-open Games
 
 [<JavaScript>]
 module Client = 
     let matchSummaryToTable (ms : MatchSummary) = 
         let header = Tags.THead [ TR [ TH [ Attr.ColSpan "3"; Attr.Class "text-center"; Text ms.StatName ] ]
-                                  TR [ TH [ Text "" ]; TH [ Text "Red" ]; TH [ Text "Blue" ] ] ]
+                                  TR [ TH [ Text "" ]; TH [ Text <| ms.RedTeam.ToString() ]; TH [ Text <| ms.BlueTeam.ToString() ] ] ]
             
         let bodyElement name (redStat : Stat) (blueStat : Stat) =
             TR [ TD [ Text name ]; TD [ Text (sprintf "%O" redStat) ]; TD [ Text (sprintf "%O" blueStat) ] ]
@@ -28,9 +27,6 @@ module Client =
         Table [ Attr.Class "table table-striped table-hover" ] -< [header; body]
 
     let Main () =
-        let parseGame text =
-            Parser.parseGame text |> Seq.map Parser.parseSet |> List.ofSeq |> Match
-
         let textDiv = Div []
         
         let makeRow summaryChunk = 
@@ -47,7 +43,7 @@ module Client =
 
         let addTable () =
             textDiv.Clear()
-            let summary = parseGame game |> matchSummary
+            let summary = parseGame Games.game |> matchSummary
             let chunks = summary |> windowChunk 2
             Div [ Attr.Class "container" ] -< (chunks |> Seq.map makeRow)
             |> textDiv.Append

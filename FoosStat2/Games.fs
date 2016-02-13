@@ -1,7 +1,9 @@
 ﻿module Games
 
     [<Literal>]
-    let game = @"set 1
+    let game = @"RED:Collignon/Atha
+BLUE:Sørensen/Toubro
+set 1
 b5,b5,b3,g_b
 r5,r3,r2,b2,g_b
 r5,r3,g_r
