@@ -10,7 +10,7 @@ open Analytics
 [<JavaScript>]
 module Client = 
     let matchSummaryToTable (ms : MatchSummary) = 
-        let header = Tags.THead [ TR [ TH [ Attr.ColSpan "3"; Attr.Class "text-center"; Text ms.StatName ] ]
+        let header = Tags.THead [ TR [ TH [ Attr.ColSpan "3"; Attr.Class "text-center"; Text ms.StatName; Attr.Title "Testing tooltip" ] ]
                                   TR [ TH [ Text "" ]; TH [ Text <| ms.RedTeam.ToString() ]; TH [ Text <| ms.BlueTeam.ToString() ] ] ]
             
         let bodyElement name (redStat : Stat) (blueStat : Stat) =
@@ -26,9 +26,12 @@ module Client =
 
         Table [ Attr.Class "table table-striped table-hover" ] -< [header; body]
 
+    [<Inline """$('[title!=""]').qtip()""">]
+    let makeTooltips () =
+        ()
+
     let Main () =
         let textDiv = Div []
-        
         let makeRow summaryChunk = 
             let wrap ms = Div [ Attr.Class "col-md-6" ] -< [ matchSummaryToTable ms ]
 
@@ -55,5 +58,11 @@ module Client =
 
         addTable ()
         
-        Div [ mainDiv
-              textDiv ] 
+        let pagelet = 
+            Div [ mainDiv
+                  textDiv ]
+        
+        pagelet
+        |> OnAfterRender (fun _ -> makeTooltips ())
+
+        pagelet

@@ -52,6 +52,10 @@ type Website() =
 type StyleResource() =
     inherit BaseResource("bootstrap.css")
 
+type TooltipResource() =
+    inherit BaseResource("http://cdn.jsdelivr.net/qtip2/2.2.1/basic/", "jquery.qtip.min.js", "jquery.qtip.min.css")
+
 [<assembly: Website(typeof<Website>)>]
 [<assembly: Require(typeof<StyleResource>)>]
+[<assembly: Require(typeof<TooltipResource>)>]
 do ()
