@@ -38,3 +38,6 @@ Icon
 # VS build files
 */bin/**
 */obj/**
+
+/packages/*
+*.suo
