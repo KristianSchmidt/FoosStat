@@ -57,6 +57,16 @@ module Analytics =
     let twoBarGoalInit color = function | Possession(c, Defence) when c = color -> true | _ -> false
     let twoBarGoalSucc color = function | Goal(c) when c = color -> true | _ -> false
 
+    let fiveBarStealInit color = function | Possession(c, Midfield) when c <> color -> true | _ -> false
+    let fiveBarStealSucc color = function | Possession(c, Midfield) when c = color -> true | _ -> false
+
+    let twoBarClearsInit color = function | Possession(c, Defence) when c = color -> true | _ -> false
+    let twoBarClearsSucc color = function
+                                | Possession(c, Midfield) when c = color -> true
+                                | Possession(c, Attack) when c = color -> true
+                                | Goal(c) when c = color -> true
+                                | _ -> false
+
     let matchStat name init succ tryfail =
         let calcFunc color ball =
             let stat = tryfail (init color) (succ color)
@@ -68,7 +78,9 @@ module Analytics =
     let fiveBarPasses        = matchStat "Five bar passes/atts"  midfieldInit midfieldSucc genericTryFail
     let fiveBarPassesRecatch = matchStat "Five bar passes/poss"  midfieldInit midfieldSucc genericTryFailRecatch
     let twoBarGoals          = matchStat "Two bar goals"         twoBarGoalInit twoBarGoalSucc genericNumber
+    let fiveBarSteals        = matchStat "Five bar steals"       fiveBarStealInit fiveBarStealSucc genericTryFailRecatch
+    let twoBarClears         = matchStat "Two bar clears"        twoBarClearsInit twoBarClearsSucc genericTryFailRecatch
 
-    let gameStats = [goals; twoBarGoals; threeBarGoals; threeBarGoalsRecatch; fiveBarPasses; fiveBarPassesRecatch]
+    let gameStats = [goals; twoBarGoals; threeBarGoals; threeBarGoalsRecatch; fiveBarPasses; fiveBarPassesRecatch; fiveBarSteals; twoBarClears]
 
     let matchSummary game = gameStats |> List.map (generateMatchSummary game)

@@ -41,6 +41,9 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <StartArguments>"C:\Users\krist_000\Documents\GitHub\FoosStat\FoosView\bin\html\index.html"</StartArguments>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <StartArguments>C:\Users\Kristian\Documents\GitHub\FoosStat\FoosView\bin\html\index.html</StartArguments>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="Client.fs" />
     <Compile Include="Main.fs" />
