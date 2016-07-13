@@ -43,7 +43,7 @@ module Client =
 
         let addTable () =
             textDiv.Clear()
-            let summary = parseGame Games.game2 |> matchSummary
+            let summary = parseGame Games.game3 |> matchSummary
             let chunks = summary |> windowChunk 2
             Div [ Attr.Class "container" ] -< (chunks |> Seq.map makeRow)
             |> textDiv.Append
