@@ -1,0 +1,33 @@
+<DefaultPage ux:Class="GamePage">
+    <JavaScript File="../../js/GamePage.js" />
+    
+    <DockPanel>
+        <StackPanel Width="250" ItemSpacing="10" Alignment="Center">
+            <WhiteText Value="{currScore}" TextAlignment="Center"/>
+            <BallStateButton Height="50" Clicked="{addGoalBlue}" Text="Goal for Blue" Color="#A3D6F5"/>
+            <StackPanel Orientation="Horizontal" Alignment="Center">
+                    <BallStateButton Width="121" Height="50" Clicked="{addRed2}"     Text="Red 2-Bar"     Color="#EE3233"/>
+                    <BallStateButton Width="121" Height="50" Clicked="{addBlue3}"    Text="Blue 3-Bar"    Color="#A3D6F5"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Alignment="Center">
+                    <BallStateButton Width="121" Height="50" Clicked="{addRed5}"     Text="Red 5-Bar"     Color="#EE3233"/>
+                    <BallStateButton Width="121" Height="50" Clicked="{addBlue5}"    Text="Blue 5-Bar"    Color="#A3D6F5"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Alignment="Center">
+                    <BallStateButton Width="121" Height="50" Clicked="{addRed3}"     Text="Red 3-Bar"     Color="#EE3233"/>
+                    <BallStateButton Width="121" Height="50" Clicked="{addBlue2}"    Text="Blue 2-Bar"    Color="#A3D6F5"/>
+            </StackPanel>
+            <BallStateButton Height="50" Clicked="{addGoalRed}"  Text="Goal for Red"  Color="#EE3233"/>
+            <DockPanel> 
+                <WhiteText Value="Current ball:" TextAlignment="Center" Dock="Top"/>
+                <TextView Value="{currBallText}" TextAlignment="Center" Dock="Bottom" Height="100" TextWrapping="Wrap" TextColor="#fff"/>
+            </DockPanel>
+        </StackPanel>
+
+        <Grid Columns="1*,1*" Dock="Bottom">
+            <BallStateButton Clicked="{clearBall}"    Text="Clear Ball"    Color="#A3D6F5" />
+            <BallStateButton Clicked="{resetGame}"    Text="Reset Game"    Color="#A3D6F5" />            
+        </Grid>
+    </DockPanel>
+
+</DefaultPage>

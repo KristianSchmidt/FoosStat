@@ -1,0 +1,29 @@
+<App Background="#fff">
+	<DockPanel>
+		<Image File="./Assets/bg2.jpg" Layer="Background" StretchMode="UniformToFill">
+			<Blur />
+		</Image>
+
+		<StatusBarBackground Dock="Top"/>
+		<BottomBarBackground Dock="Bottom" />
+		
+		<Grid Columns="1*,1*" Dock="Top">
+            <BallStateButton Text="GAME"   Color="#A3D6F5">
+                <Clicked>
+                    <Set pageControl.Active="gamePage" />
+                </Clicked>
+            </BallStateButton>
+            <BallStateButton Text="STATS"  Color="#A3D6F5" >
+                <Clicked>
+                    <Set pageControl.Active="statsPage" />
+                </Clicked>
+            </BallStateButton>
+        </Grid>
+
+		<PageControl ux:Name="pageControl">
+			<GamePage ux:Name="gamePage" />
+			<StatsPage ux:Name="statsPage"/>
+		</PageControl>
+	</DockPanel>
+
+</App>

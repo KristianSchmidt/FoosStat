@@ -1,0 +1,9 @@
+<DefaultPage ux:Class="StatsPage">
+    <JavaScript File="../../js/StatsPage.js" />
+    <DockPanel>
+        <StackPanel Width="250" ItemSpacing="10" Alignment="Center">
+            <WhiteText Value="{currScore}" TextAlignment="Center"/>
+            <BallStateButton Height="50" Clicked="{addGoalBlue}" Text="Goal for Blue" Color="#A3D6F5"/>
+        </StackPanel>
+    </DockPanel>
+</DefaultPage>

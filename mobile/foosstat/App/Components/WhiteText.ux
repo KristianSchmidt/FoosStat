@@ -1,0 +1,3 @@
+<Text ux:Class="WhiteText" Color="#fff" FontSize="20">
+    <DropShadow />
+</Text>

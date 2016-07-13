@@ -1,0 +1,11 @@
+<Button ux:Class="BallStateButton" Margin="2">
+    <Panel ux:Template="GraphicsAppearance" HitTestMode="LocalBounds">
+        <Text ux:Name="Button_Text" Value="{Property this.Text}" TextColor="#000" Alignment="Center" TextAlignment="Center" Margin="10" />
+        <Rectangle CornerRadius="4" Layer="Background" Color="{Property this.Color}">
+        </Rectangle>
+    </Panel>
+    <WhilePressed>
+        <BringToFront />
+        <Scale Factor="1.2" Duration="0.1" Easing="BounceOut" EasingBack="BounceIn"/> 
+    </WhilePressed>
+</Button>
