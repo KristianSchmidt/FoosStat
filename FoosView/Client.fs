@@ -26,7 +26,13 @@ module Client =
 
         Table [ Attr.Class "table table-striped table-hover" ] -< [header; body]
 
-    [<Inline """$('[title!=""]').qtip()""">]
+    [<Inline """$('[title!=""]')
+                  .qtip({
+                    position: {
+                        target: 'mouse', adjust: { x: 5, y: 5 }
+                        },
+                    style: { classes: 'qtip-light qtip-shadow' }
+                    })""">]
     let makeTooltips () =
         ()
 
