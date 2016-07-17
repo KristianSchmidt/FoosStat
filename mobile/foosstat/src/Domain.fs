@@ -89,14 +89,6 @@ module Analytics =
 
     let pairwiseStat f (ball : Ball) = ball.pairwise |> Seq.map f |> List.ofSeq
 
-    let goals =
-        let goals' color (ball : Ball) =
-            let goalStat : Event * Event -> Stat = function
-                                                   | _,Goal(c) when c = color -> NumberStat(1)
-                                                   | _ -> NumberStat(0)
-            ball |> pairwiseStat goalStat
-        MatchStat("Goals", goals')
-
     let genericNumber initial success (e1,e2) =
         match (initial e1),(success e2) with
         | true,true -> NumberStat(1)
@@ -140,6 +132,7 @@ module Analytics =
             ball |> pairwiseStat stat
         MatchStat(name, calcFunc)
 
+    let goals                = matchStat "Goals"                 (fun _ _ -> true) threeBarSucc genericNumber
     let threeBarGoals        = matchStat "Three bar goals/shots" threeBarInit threeBarSucc genericTryFail
     let threeBarGoalsRecatch = matchStat "Three bar goals/poss"  threeBarInit threeBarSucc genericTryFailRecatch
     let fiveBarPasses        = matchStat "Five bar passes/atts"  midfieldInit midfieldSucc genericTryFail
