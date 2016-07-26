@@ -21,6 +21,8 @@ module FoosStat =
 
     let set = allBalls.toArray() |> Array.map List.ofArray |> List.ofArray |> List.map Ball |> Set
 
+    let m = { Sets = [ set ]; Red = SingleTeam "Red"; Blue = SingleTeam "Blue" }
+
     let currBall : Observable.IObservable<Event> = Observable.createList [||]
 
     let private currBallToString () = currBall.toArray () |> Array.map eventToString |> String.concat " - "

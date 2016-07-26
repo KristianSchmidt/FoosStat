@@ -3,7 +3,14 @@
     <DockPanel>
         <StackPanel Width="250" ItemSpacing="10" Alignment="Center">
             <WhiteText Value="{currScore}" TextAlignment="Center"/>
-            <BallStateButton Height="50" Clicked="{addGoalBlue}" Text="Goal for Blue" Color="#A3D6F5"/>
+            <BallStateButton Height="50" Clicked="{addTester}" Text="Goal for Blue" Color="#A3D6F5"/>
         </StackPanel>
     </DockPanel>
+    <ScrollView>
+        <StackPanel>
+            <Each Items="{matchSummary}">
+                <BallStateButton Height="50" Text="{StatName}" Color="#A3D6F5"/>
+            </Each>
+        </StackPanel>
+    </ScrollView>
 </DefaultPage>
