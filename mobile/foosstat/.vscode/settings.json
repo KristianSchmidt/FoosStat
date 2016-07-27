@@ -1,0 +1,7 @@
+{
+    "files.exclude": {
+        "node_modules/": true,
+        "App/.uno": true,
+        "App/build": true
+    }
+}
