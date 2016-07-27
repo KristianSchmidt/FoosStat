@@ -9,6 +9,8 @@ module Domain =
                                    | SingleTeam(s) -> s
                                    | DoubleTeam(s1,s2) -> sprintf "%s/%s" s1 s2
 
+        member this.name = this.ToString()
+
     type PlayerColor = 
         | Red
         | Blue

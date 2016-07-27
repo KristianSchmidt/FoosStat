@@ -7,16 +7,18 @@ open FoosStat
 open Domain
 
 module StatsPage =
+    
     let matchSummary = Observable.createList [||]
-
+    
     let updateSummary (obs : Observable.IObservable<_>) =
-        let set = obs.toArray() |> Array.map List.ofArray |> List.ofArray |> List.map Ball |> Set
+        if (allBalls.length > 0) then
+            let set = obs.toArray() |> Array.map List.ofArray |> List.ofArray |> List.map Ball |> Set
 
-        let m = { Sets = [ set ]; Red = SingleTeam "Red"; Blue = SingleTeam "Blue" }
+            let m = { Sets = [ set ]; Red = SingleTeam "Red"; Blue = SingleTeam "Blue" }
 
-        let summ = App.Analytics.matchSummary m |> List.toArray
-        matchSummary.replaceAll summ
-
+            let summ = App.Analytics.matchSummary m |> List.toArray
+            matchSummary.replaceAll summ
+    
     allBalls.addSubscriber updateSummary
     
     let currScore = FoosStat.currScore
@@ -37,3 +39,4 @@ module StatsPage =
     let testers = Observable.createList [| {testName = "Test 1"}; { testName = "Test 2"}|]
 
     let addTester _ = testers.add {testName = "Test X"}
+    

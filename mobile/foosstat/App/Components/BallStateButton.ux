@@ -1,7 +1,6 @@
 <Panel ux:Class="BallStateButton" Alignment="VerticalCenter" Margin="3" Padding="10" FontSize="20">
 	<string ux:Property="Text" />
 	<float ux:Property="FontSize" />
-    <string ux:Property="Color" />
 
 	<Rectangle Layer="Background" Color="{Property Color}" CornerRadius="4">
 		<DropShadow Angle="90" Distance="1" Spread="0.2" Size="2" Color="#00000060" />
