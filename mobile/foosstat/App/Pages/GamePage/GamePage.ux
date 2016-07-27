@@ -19,8 +19,8 @@
             </StackPanel>
             <BallStateButton Height="50" Clicked="{addGoalRed}"  Text="Goal for Red"  Color="#EE3233"/>
             <DockPanel> 
-                <WhiteText Value="Current ball:" TextAlignment="Center" Dock="Top"/>
-                <TextView Value="{currBallText}" TextAlignment="Center" Dock="Bottom" Height="100" TextWrapping="Wrap" TextColor="#fff"/>
+                <WhiteText Value="Current ball:" TextAlignment="Center" Dock="Top" FontSize="20"/>
+                <TextView Value="{currBallText}" TextAlignment="Center" Dock="Bottom" Height="100" TextWrapping="Wrap" TextColor="#fff" FontSize="20"/>
             </DockPanel>
         </StackPanel>
 
