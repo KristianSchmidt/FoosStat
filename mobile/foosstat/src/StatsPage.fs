@@ -11,7 +11,7 @@ module StatsPage =
     let matchSummary = Observable.createList [||]
     
     let updateSummary (obs : Observable.IObservable<_>) =
-        if (allBalls.length > 0) then
+        if (obs.length > 0) then
             let set = obs.toArray() |> Array.map List.ofArray |> List.ofArray |> List.map Ball |> Set
 
             let m = { Sets = [ set ]; Red = SingleTeam "Red"; Blue = SingleTeam "Blue" }

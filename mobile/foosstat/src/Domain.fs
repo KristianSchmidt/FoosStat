@@ -56,6 +56,8 @@ module Domain =
             | TryFailStat(0,0) -> sprintf "0 / 0 (N/A)"
             | TryFailStat(suc,att) -> sprintf "%i / %i (%.0f %%)" suc att (100.0 * (float)suc / (float)att)
 
+        member this.asString = this.ToString()
+
         static member (+) (s1, s2) =
             match (s1,s2) with
             | NumberStat(n1),NumberStat(n2) -> NumberStat(n1+n2)
