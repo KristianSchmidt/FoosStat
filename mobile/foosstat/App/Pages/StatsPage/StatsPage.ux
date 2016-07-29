@@ -1,4 +1,6 @@
 <DefaultPage ux:Class="StatsPage">
+    <Text ux:Class="StatPageText" FontSize="20" TextAlignment="Center" Color="Black">
+    </Text>
     <DockPanel ux:Class="StatCard" Alignment="VerticalCenter" Margin="3" Padding="10" FontSize="20" Height="100">
         <float ux:Property="FontSize" />
 
@@ -7,26 +9,16 @@
         </Rectangle>
 
         <Panel Dock="Top">
-            <Text Value="{StatName}" FontSize="{Property FontSize}" TextAlignment="Center" Color="White">
-                <DropShadow Angle="90" Distance="1" Spread="0.2" Size="2" Color="#00000060" />
-            </Text>
+            <StatPageText Value="{StatName}" />
         </Panel>
 
         <Panel Dock="Top">
-            <Text Value="Red" FontSize="{Property FontSize}" TextAlignment="Left" Color="White">
-                <DropShadow Angle="90" Distance="1" Spread="0.2" Size="2" Color="#00000060" />
-            </Text>
-            <Text Value="Blue" FontSize="{Property FontSize}" TextAlignment="Right" Color="White">
-                <DropShadow Angle="90" Distance="1" Spread="0.2" Size="2" Color="#00000060" />
-            </Text>
+            <StatPageText Value="Red"  TextAlignment="Left"  />
+            <StatPageText Value="Blue" TextAlignment="Right" />
         </Panel>
         <Panel>
-            <Text Value="{Red.MatchTotal.asString}" FontSize="{Property FontSize}" TextAlignment="Left" Color="White">
-                <DropShadow Angle="90" Distance="1" Spread="0.2" Size="2" Color="#00000060" />
-            </Text>
-            <Text Value="{Blue.MatchTotal.asString}" FontSize="{Property FontSize}" TextAlignment="Right" Color="White">
-                <DropShadow Angle="90" Distance="1" Spread="0.2" Size="2" Color="#00000060" />
-            </Text>
+            <StatPageText Value="{Red.MatchTotal.asString}"  TextAlignment="Left"  />
+            <StatPageText Value="{Blue.MatchTotal.asString}" TextAlignment="Right" />
         </Panel>
         
         <WhilePressed>
