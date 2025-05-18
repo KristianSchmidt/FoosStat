@@ -54,7 +54,7 @@ def printMat(name, mat):
     print(mat)
 
 
-#printMat("Norm", normalized)
+printMat("Norm", normalized)
 
 Q = normalized[:transientDim, :transientDim]
 #printMat("Q", Q)
@@ -73,51 +73,29 @@ df.columns = ['b', 'r']
 df.index = states[:6]
 print(df.loc[['b5', 'r5'],:])
 
-def oppositeSide(side):
-    if side == 'b':
-        return 'r'
-    else:
-        return 'b'
-
-def oppositeSide5(side):
-    if side == 'b5':
-        return 'r5'
-    else:
-        return 'b5'
-
-def pWinSet(probs, endscore, side, score_b, score_r, starting):
-    if side = 'b' and score_b == endscore:
+def pRedWinSet(probs, endscore, score_r, score_b, starting):
+    if score_r == endscore:
         return 1.0
-    if side = 'r' and score_r == endscore:
-        return 1.0
-    if side = 'b' and score_r == endscore:
+    if score_b == endscore:
         return 0.0
-    if side = 'r' and score_b == endscore:
-        return 0.0
-
-    opp = oppositeSide(side)
-    oppStart = oppositeSide5(starting)
-
-    pIfScore = pWinSet(probs, side, score_for + 1, score_against, oppStart)
-    pScore = probs.loc[starting, side]
     
-
-    pOppScores = probs.loc[starting, opp]
-    pIfOppScores = pWinSet(probs, side, score_for, score_against + 1, starting)
+    pIfScore = pRedWinSet(probs, endscore, score_r + 1, score_b, 'b5')
+    pScore = probs.loc[starting, 'r']
     
-    print("At score ", score_for, " - ", score_against)
-    print("pScore: ", pScore)
-    print("pIfScore: ", pIfScore)
-    print("pOppScores: ", pOppScores)
-    print("pIfOppScores: ", pIfOppScores)
+    pIfNotScore = pRedWinSet(probs, endscore, score_r, score_b + 1, 'r5')
+    pNotScore = probs.loc[starting, 'b']
     
-    return  (pScore * pIfScore) + (pOppScores * pIfOppScores)
+    #print("At score ", score_r, " - ", score_b)
+    #print("pScore: ", pScore)
+    #print("pIfScore: ", pIfScore)
+    #print("pOppScores: ", pIfNotScore)
+    #print("pIfOppScores: ", pNotScore)
+    
+    return  (pScore * pIfScore) + (pNotScore * pIfNotScore)
+    
+pRedWinSet(df, 5, 0, 0, 'r5')
 
-pWinSet(df, 'r', 3, 4, 'b5')
+dfSet = pandas.DataFrame({'b': [1-pRedWinSet(df, 5, 0, 0, 'b5'), 1-pRedWinSet(df, 5, 0, 0, 'r5')], 'r': [pRedWinSet(df, 5, 0, 0, 'b5'), pRedWinSet(df, 5, 0, 0, 'r5')]}, index=['b5','r5'])
 
-
-
-pWinSet(df, 'r', 0, 0, 'b5')
-pWinSet(df, 'b', 0, 0, 'r5')
-pWinSet(df, 'r', 0, 0, 'r5')
+pRedWinSet(dfSet, 3, 0, 0, 'r5')
 
