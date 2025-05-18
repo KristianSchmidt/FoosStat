@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foosball Scorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .button-click {
+            animation: buttonPulse 0.3s ease-in-out;
+        }
+        
+        @keyframes buttonPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+        
+        .set-win {
+            animation: setWinPulse 1s ease-in-out;
+        }
+        
+        @keyframes setWinPulse {
+            0% { transform: scale(1); color: inherit; }
+            30% { transform: scale(1.5); color: gold; }
+            70% { transform: scale(1.5); color: gold; }
+            100% { transform: scale(1); color: inherit; }
+        }
+        
+        .tab-content {
+            transition: opacity 0.3s ease;
+        }
+        
+        .tab-content.hidden {
+            display: none;
+            opacity: 0;
+        }
+        
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+        }
+        
+        .touch-container {
+            touch-action: pan-y; /* Enable horizontal swiping but allow vertical scrolling */
+            overflow: hidden;
+            width: 100%;
+        }
+    </style>
+    <script>
+        // Game history tracking
+        let gameHistory = [];
+        let blueScore = 0;
+        let redScore = 0;
+        let blueSets = 0;
+        let redSets = 0;
+        
+        function addClickEffect(button) {
+            button.classList.add('button-click');
+            setTimeout(() => {
+                button.classList.remove('button-click');
+            }, 300);
+        }
+        
+        function recordAction(action) {
+            gameHistory.push(action);
+            updateHistoryDisplay();
+            
+            // Update score if it's a goal
+            if (action === 'g_b') {
+                blueScore++;
+                document.getElementById('blue-score').textContent = blueScore;
+                
+                // Check if blue team won a set
+                if (blueScore >= 5) {
+                    blueSets++;
+                    document.getElementById('blue-sets').textContent = blueSets;
+                    blueScore = 0;
+                    redScore = 0;
+                    document.getElementById('blue-score').textContent = blueScore;
+                    document.getElementById('red-score').textContent = redScore;
+                    // Animate set win
+                    const blueSetElement = document.getElementById('blue-sets');
+                    blueSetElement.classList.add('set-win');
+                    blueSetElement.addEventListener('animationend', function() {
+                        blueSetElement.classList.remove('set-win');
+                    }, {once: true});
+                }
+                
+                // After blue scores, clear history and set red 5 bar as starting position
+                setTimeout(() => {
+                    gameHistory = ['r5']; // Clear history and start with r5
+                    updateHistoryDisplay();
+                }, 500);
+            } else if (action === 'g_r') {
+                redScore++;
+                document.getElementById('red-score').textContent = redScore;
+                
+                // Check if red team won a set
+                if (redScore >= 5) {
+                    redSets++;
+                    document.getElementById('red-sets').textContent = redSets;
+                    blueScore = 0;
+                    redScore = 0;
+                    document.getElementById('blue-score').textContent = blueScore;
+                    document.getElementById('red-score').textContent = redScore;
+                    // Animate set win
+                    const redSetElement = document.getElementById('red-sets');
+                    redSetElement.classList.add('set-win');
+                    redSetElement.addEventListener('animationend', function() {
+                        redSetElement.classList.remove('set-win');
+                    }, {once: true});
+                }
+                
+                // After red scores, clear history and set blue 5 bar as starting position
+                setTimeout(() => {
+                    gameHistory = ['b5']; // Clear history and start with b5
+                    updateHistoryDisplay();
+                }, 500);
+            }
+        }
+        
+        function updateHistoryDisplay() {
+            const historyElement = document.getElementById('game-history');
+            if (gameHistory.length === 0) {
+                historyElement.innerHTML = '<p>Game history will appear here</p>';
+                return;
+            }
+            
+            // Get the last 5 entries (or fewer if there aren't 5 yet)
+            const recentActions = gameHistory.slice(-5);
+            historyElement.innerHTML = recentActions.join(', ');
+        }
+        
+        function resetGame() {
+            // Reset all scores and sets
+            blueScore = 0;
+            redScore = 0;
+            blueSets = 0;
+            redSets = 0;
+            gameHistory = [];
+            
+            // Update UI
+            document.getElementById('blue-score').textContent = blueScore;
+            document.getElementById('red-score').textContent = redScore;
+            document.getElementById('blue-sets').textContent = blueSets;
+            document.getElementById('red-sets').textContent = redSets;
+            updateHistoryDisplay();
+        }
+    </script>
+</head>
+<body class="bg-gray-100 flex justify-center items-center min-h-screen p-4">
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-lg overflow-hidden p-6">
+        <!-- Tab Navigation -->
+        <div class="flex mb-4 border-b border-gray-200">
+            <button id="tab-entry" class="py-2 px-4 font-medium text-blue-600 border-b-2 border-blue-600 tab-button">Entry</button>
+            <button id="tab-stats" class="py-2 px-4 font-medium text-gray-500 tab-button">Stats</button>
+        </div>
+        
+        <!-- Game History Display -->
+        <div id="game-history" class="text-sm text-gray-600 mb-4 p-2 bg-gray-50 rounded-xl min-h-[30px] flex items-center justify-center">
+            <p>Game history will appear here</p>
+        </div>
+        
+
+        <!-- Tab Content -->
+        <div id="tab-content" class="touch-container">
+            <!-- Entry Tab -->
+            <div id="content-entry" class="tab-content active">
+                <div class="flex flex-col gap-4">
+                    <!-- Score Display -->
+                    <div id="score-display" class="w-full p-2 bg-gray-100 text-center mb-2 rounded-xl">
+                        <div class="flex justify-around">
+                            <span id="red-score" class="text-red-600 font-bold text-2xl">0</span>
+                            <span class="text-gray-600 font-bold text-2xl">-</span>
+                            <span id="blue-score" class="text-blue-600 font-bold text-2xl">0</span>
+                        </div>
+                        <div class="mt-2 flex justify-around text-sm">
+                            <span>Sets: <span id="red-sets" class="text-red-600 font-bold">0</span></span>
+                            <span>Sets: <span id="blue-sets" class="text-blue-600 font-bold">0</span></span>
+                        </div>
+                    </div>
+                    <!-- Top GOAL BLUE button -->
+                    <button onclick="addClickEffect(this); recordAction('g_b');" class="w-full py-4 bg-blue-100 text-black font-bold text-2xl rounded-xl">GOAL BLUE</button>
+            
+            <!-- Middle rows of buttons -->
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Row 1 -->
+                <button onclick="addClickEffect(this); recordAction('r2');" class="py-6 bg-red-500 text-black font-bold text-xl rounded-xl">Red<br>2 bar</button>
+                <button onclick="addClickEffect(this); recordAction('b3');" class="py-6 bg-blue-400 text-black font-bold text-xl rounded-xl">Blue<br>3 bar</button>
+                
+                <!-- Row 2 -->
+                <button onclick="addClickEffect(this); recordAction('r5');" class="py-6 bg-red-500 text-black font-bold text-xl rounded-xl">Red<br>5 bar</button>
+                <button onclick="addClickEffect(this); recordAction('b5');" class="py-6 bg-blue-400 text-black font-bold text-xl rounded-xl">Blue<br>5 bar</button>
+                
+                <!-- Row 3 -->
+                <button onclick="addClickEffect(this); recordAction('r3');" class="py-6 bg-red-500 text-black font-bold text-xl rounded-xl">Red<br>3 bar</button>
+                <button onclick="addClickEffect(this); recordAction('b2');" class="py-6 bg-blue-400 text-black font-bold text-xl rounded-xl">Blue<br>2 bar</button>
+            </div>
+            
+            <!-- Bottom GOAL RED button -->
+            <button onclick="addClickEffect(this); recordAction('g_r');" class="w-full py-4 bg-red-500 text-black font-bold text-2xl rounded-xl">GOAL RED</button>
+                </div>
+            </div>
+            
+            <!-- Stats Tab -->
+            <div id="content-stats" class="tab-content hidden">
+                <div class="flex flex-col gap-4">
+                    <h2 class="text-2xl font-bold text-center mb-4">Game Statistics</h2>
+                    <div class="p-4 bg-gray-50 rounded-xl">
+                        <p class="text-lg mb-2">Stats content will go here...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize game history on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateHistoryDisplay();
+            // Scroll to bottom of the page with a slight delay to ensure rendering is complete
+            setTimeout(() => {
+                window.scrollTo(0, document.body.scrollHeight);
+            }, 100);
+        });
+    
+        // Tab switching functionality
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.id.replace('tab-', '');
+                activateTab(tabId);
+            });
+        });
+        
+        function activateTab(tabId) {
+            // Update tab buttons
+            tabButtons.forEach(btn => {
+                if (btn.id === `tab-${tabId}`) {
+                    btn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+                    btn.classList.remove('text-gray-500');
+                } else {
+                    btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+                    btn.classList.add('text-gray-500');
+                }
+            });
+            
+            // Update tab contents
+            tabContents.forEach(content => {
+                if (content.id === `content-${tabId}`) {
+                    content.classList.remove('hidden');
+                    content.classList.add('active');
+                    // If this is the entry tab, scroll to bottom after it's visible
+                    if (tabId === 'entry') {
+                        setTimeout(() => {
+                            window.scrollTo(0, document.body.scrollHeight);
+                        }, 10); // Small delay to ensure the content is rendered
+                    }
+                } else {
+                    content.classList.add('hidden');
+                    content.classList.remove('active');
+                }
+            });
+        }
+        
+        // Swipe functionality for mobile
+        const touchContainer = document.getElementById('tab-content');
+        let startX;
+        let endX;
+        
+        touchContainer.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+        });
+        
+        touchContainer.addEventListener('touchend', (e) => {
+            endX = e.changedTouches[0].clientX;
+            handleSwipe();
+        });
+        
+        function handleSwipe() {
+            const threshold = 100; // Minimum distance for a swipe
+            const currentTab = document.querySelector('.tab-content.active').id;
+            const swipeDistance = endX - startX;
+            
+            if (Math.abs(swipeDistance) < threshold) return; // Not a significant swipe
+            
+            if (currentTab === 'content-entry' && swipeDistance < 0) {
+                // Swipe left from Entry to Stats
+                activateTab('stats');
+            } else if (currentTab === 'content-stats' && swipeDistance > 0) {
+                // Swipe right from Stats to Entry
+                activateTab('entry');
+            }
+        }
+    </script>
+</body>
+</html>
