@@ -29,16 +29,20 @@
         
         .tab-content {
             transition: opacity 0.3s ease;
+            height: 630px; /* Fixed height based on tallest content */
+            overflow-y: auto; /* Allow scrolling if content exceeds height */
         }
         
         .tab-content.hidden {
             display: none;
             opacity: 0;
+            position: absolute;
         }
         
         .tab-content.active {
             display: block;
             opacity: 1;
+            position: relative;
         }
         
         .touch-container {
