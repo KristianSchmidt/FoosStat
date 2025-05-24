@@ -1,7 +1,0 @@
-name = "numpy-matrix-demo"
-main = "stat_worker.py"
-compatibility_date = "2025-05-19"
-compatibility_flags = ["python_workers"]
-
-[observability]
-enabled = true
