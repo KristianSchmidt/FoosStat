@@ -2,10 +2,10 @@
 import asyncio
 import json
 import uuid
-from typing import Dict, List
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from typing import Dict, List, Optional
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Form
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 app = FastAPI()
 
@@ -18,6 +18,11 @@ class GameState:
         self.blue_sets = 0
         self.red_sets = 0
         self.possession_history: List[str] = []
+        self.game_mode = "singles"
+        self.red_player1 = "Red"
+        self.red_player2: Optional[str] = None
+        self.blue_player1 = "Blue"
+        self.blue_player2: Optional[str] = None
         
     def reset(self):
         self.game_id = str(uuid.uuid4())
@@ -26,6 +31,30 @@ class GameState:
         self.blue_sets = 0
         self.red_sets = 0
         self.possession_history = []
+        
+    def get_red_display_name(self):
+        """Get last name for red team display"""
+        if self.game_mode == "singles":
+            return self.red_player1.split()[-1] if self.red_player1 else "Red"
+        else:
+            names = []
+            if self.red_player1:
+                names.append(self.red_player1.split()[-1])
+            if self.red_player2:
+                names.append(self.red_player2.split()[-1])
+            return "/".join(names) if names else "Red"
+    
+    def get_blue_display_name(self):
+        """Get last name for blue team display"""
+        if self.game_mode == "singles":
+            return self.blue_player1.split()[-1] if self.blue_player1 else "Blue"
+        else:
+            names = []
+            if self.blue_player1:
+                names.append(self.blue_player1.split()[-1])
+            if self.blue_player2:
+                names.append(self.blue_player2.split()[-1])
+            return "/".join(names) if names else "Blue"
 
 # Global game state
 game_state = GameState()
@@ -38,6 +67,9 @@ async def broadcast_score_update():
     if not connected_websockets:
         return
         
+    red_name = game_state.get_red_display_name()
+    blue_name = game_state.get_blue_display_name()
+        
     score_html = f'''
     <div id="score-display" hx-swap-oob="true">
         <div class="w-full p-2 bg-gray-100 text-center mb-2 rounded-xl">
@@ -47,8 +79,8 @@ async def broadcast_score_update():
                 <span id="blue-score" class="text-blue-600 font-bold text-2xl">{game_state.blue_score}</span>
             </div>
             <div class="mt-2 flex justify-around text-sm">
-                <span>Sets: <span id="red-sets" class="text-red-600 font-bold">{game_state.red_sets}</span></span>
-                <span>Sets: <span id="blue-sets" class="text-blue-600 font-bold">{game_state.blue_sets}</span></span>
+                <span>{red_name}: <span id="red-sets" class="text-red-600 font-bold">{game_state.red_sets}</span></span>
+                <span>{blue_name}: <span id="blue-sets" class="text-blue-600 font-bold">{game_state.blue_sets}</span></span>
             </div>
         </div>
     </div>
@@ -71,8 +103,9 @@ async def broadcast_score_update():
     stats_html = f'''
     <div id="stats-content" hx-swap-oob="true" class="p-4 bg-gray-50 rounded-xl">
         <p class="text-lg mb-2">Game ID: {game_state.game_id}</p>
-        <p class="text-lg mb-2">Score: Red {game_state.red_score} - {game_state.blue_score} Blue</p>
-        <p class="text-lg mb-2">Sets: Red {game_state.red_sets} - {game_state.blue_sets} Blue</p>
+        <p class="text-lg mb-2">Mode: {game_state.game_mode.title()}</p>
+        <p class="text-lg mb-2">Score: {red_name} {game_state.red_score} - {game_state.blue_score} {blue_name}</p>
+        <p class="text-lg mb-2">Sets: {red_name} {game_state.red_sets} - {game_state.blue_sets} {blue_name}</p>
         <p class="text-lg mb-2">Total possessions: {len(game_state.possession_history)}</p>
         <div class="mt-4">
             <p class="font-bold mb-2">Recent possessions:</p>
@@ -146,9 +179,48 @@ async def websocket_endpoint(websocket: WebSocket):
         connected_websockets.remove(websocket)
 
 @app.get("/", response_class=HTMLResponse)
-async def get_index():
-    with open("foosball_layout_htmx.html", "r") as f:
+async def get_splash():
+    with open("splash.html", "r") as f:
         return HTMLResponse(f.read())
+
+@app.post("/start-game")
+async def start_game(
+    game_mode: str = Form(...),
+    red_player1: str = Form(...),
+    blue_player1: str = Form(...),
+    red_player2: str = Form(""),
+    blue_player2: str = Form("")
+):
+    # Update game state with player info
+    game_state.game_mode = game_mode
+    game_state.red_player1 = red_player1.strip()
+    game_state.blue_player1 = blue_player1.strip()
+    game_state.red_player2 = red_player2.strip() if red_player2.strip() else None
+    game_state.blue_player2 = blue_player2.strip() if blue_player2.strip() else None
+    
+    # Reset scores for new game
+    game_state.reset()
+    
+    # Redirect to game page to ensure fresh websocket connection
+    return RedirectResponse(url="/game", status_code=303)
+
+@app.get("/game", response_class=HTMLResponse)
+async def get_game():
+    return HTMLResponse(get_game_html())
+
+def get_game_html():
+    """Generate game HTML with current player names"""
+    with open("foosball_game_template.html", "r") as f:
+        template = f.read()
+    
+    red_name = game_state.get_red_display_name()
+    blue_name = game_state.get_blue_display_name()
+    
+    # Replace placeholders with actual names
+    html = template.replace("{{RED_NAME}}", red_name)
+    html = html.replace("{{BLUE_NAME}}", blue_name)
+    
+    return html
 
 @app.post("/reset")
 async def reset_game():
