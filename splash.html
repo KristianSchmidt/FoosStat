@@ -47,19 +47,23 @@
             <!-- Team Red -->
             <div class="mb-6">
                 <h3 class="text-lg font-bold text-red-600 mb-3">Red Team</h3>
-                <input type="text" name="red_player1" placeholder="Player 1 Full Name" 
-                       class="w-full p-3 border border-gray-300 rounded-xl mb-2 focus:border-red-500 focus:outline-none" required>
-                <input type="text" name="red_player2" placeholder="Player 2 Full Name (doubles only)" 
-                       class="w-full p-3 border border-gray-300 rounded-xl doubles-only hidden">
+                <input type="text" name="red_player1" value="Kristian Schmidt" placeholder="Player 1 Full Name" 
+                       class="w-full p-3 border border-gray-300 rounded-xl mb-2 focus:border-red-500 focus:outline-none" required
+                       onfocus="clearDefaultValue(this)" data-default="singles">
+                <input type="text" name="red_player2" value="Sven Wonsyld" placeholder="Player 2 Full Name (doubles only)" 
+                       class="w-full p-3 border border-gray-300 rounded-xl doubles-only hidden"
+                       onfocus="clearDefaultValue(this)" data-default="doubles">
             </div>
 
             <!-- Team Blue -->
             <div class="mb-6">
                 <h3 class="text-lg font-bold text-blue-600 mb-3">Blue Team</h3>
-                <input type="text" name="blue_player1" placeholder="Player 1 Full Name" 
-                       class="w-full p-3 border border-gray-300 rounded-xl mb-2 focus:border-blue-500 focus:outline-none" required>
-                <input type="text" name="blue_player2" placeholder="Player 2 Full Name (doubles only)" 
-                       class="w-full p-3 border border-gray-300 rounded-xl doubles-only hidden">
+                <input type="text" name="blue_player1" value="Frederic Collignon" placeholder="Player 1 Full Name" 
+                       class="w-full p-3 border border-gray-300 rounded-xl mb-2 focus:border-blue-500 focus:outline-none" required
+                       onfocus="clearDefaultValue(this)" data-default="singles">
+                <input type="text" name="blue_player2" value="Niels Wonsyld" placeholder="Player 2 Full Name (doubles only)" 
+                       class="w-full p-3 border border-gray-300 rounded-xl doubles-only hidden"
+                       onfocus="clearDefaultValue(this)" data-default="doubles">
             </div>
 
             <!-- Start Game Button -->
@@ -76,6 +80,20 @@
             setTimeout(() => {
                 button.classList.remove('button-click');
             }, 300);
+        }
+
+        function clearDefaultValue(input) {
+            // Check if this is a default value that should be cleared
+            const defaultNames = {
+                'Kristian Schmidt': true,
+                'Frederic Collignon': true,
+                'Sven Wonsyld': true,
+                'Niels Wonsyld': true
+            };
+            
+            if (defaultNames[input.value]) {
+                input.value = '';
+            }
         }
 
         // Handle game mode toggle
@@ -108,10 +126,21 @@
                     if (isDoubles) {
                         input.classList.remove('hidden');
                         input.required = true;
+                        // Set doubles default values if empty
+                        if (input.name === 'red_player2' && input.value === '') {
+                            input.value = 'Sven Wonsyld';
+                        } else if (input.name === 'blue_player2' && input.value === '') {
+                            input.value = 'Niels Wonsyld';
+                        }
                     } else {
                         input.classList.add('hidden');
                         input.required = false;
                         input.value = '';
+                        // Reset singles defaults when switching back
+                        const redPlayer1 = document.querySelector('input[name="red_player1"]');
+                        const bluePlayer1 = document.querySelector('input[name="blue_player1"]');
+                        if (redPlayer1.value === '') redPlayer1.value = 'Kristian Schmidt';
+                        if (bluePlayer1.value === '') bluePlayer1.value = 'Frederic Collignon';
                     }
                 });
             });
