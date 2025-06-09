@@ -43,3 +43,5 @@ Icon
 *.suo
 
 node_modules/
+
+__pycache__/
