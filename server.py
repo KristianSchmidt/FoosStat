@@ -6,6 +6,7 @@ from typing import Dict, List, Optional
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
+from analytics import AnalyticsEngine
 
 app = FastAPI()
 
@@ -17,7 +18,8 @@ class GameState:
         self.red_score = 0
         self.blue_sets = 0
         self.red_sets = 0
-        self.possession_history: List[str] = []
+        self.possession_history: List[str] = []  # For UI display (recent possessions)
+        self.complete_history: List[str] = []    # Complete game history for analytics
         self.game_mode = "singles"
         self.red_player1 = "Red"
         self.red_player2: Optional[str] = None
@@ -31,6 +33,7 @@ class GameState:
         self.blue_sets = 0
         self.red_sets = 0
         self.possession_history = []
+        self.complete_history = []
         
     def get_red_display_name(self):
         """Get last name for red team display"""
@@ -97,19 +100,64 @@ async def broadcast_score_update():
     '''
     print(f"Broadcasting history: {history_text}")
     
-    # Also update the stats tab
-    recent_possessions = game_state.possession_history[-10:] if len(game_state.possession_history) > 0 else []
+    # Generate comprehensive stats using complete history
+    full_stats = AnalyticsEngine.generate_full_stats(game_state.complete_history)
+    
+    # Build stats HTML
+    stats_rows = []
+    stat_names = [
+        "Goals",
+        "Three bar goals/shots", 
+        "Three bar goals/possessions",
+        "Five bar passes/attempts",
+        "Five bar passes/possessions", 
+        "Two bar goals",
+        "Five bar steals",
+        "Two bar clears"
+    ]
+    
+    for stat_name in stat_names:
+        red_stat = full_stats["red"].get(stat_name, "0")
+        blue_stat = full_stats["blue"].get(stat_name, "0")
+        stats_rows.append(f'''
+        <tr class="border-b">
+            <td class="py-2 px-4 text-left">{stat_name}</td>
+            <td class="py-2 px-4 text-center text-red-600 font-mono">{red_stat}</td>
+            <td class="py-2 px-4 text-center text-blue-600 font-mono">{blue_stat}</td>
+        </tr>
+        ''')
     
     stats_html = f'''
     <div id="stats-content" hx-swap-oob="true" class="p-4 bg-gray-50 rounded-xl">
-        <p class="text-lg mb-2">Game ID: {game_state.game_id}</p>
-        <p class="text-lg mb-2">Mode: {game_state.game_mode.title()}</p>
-        <p class="text-lg mb-2">Score: {red_name} {game_state.red_score} - {game_state.blue_score} {blue_name}</p>
-        <p class="text-lg mb-2">Sets: {red_name} {game_state.red_sets} - {game_state.blue_sets} {blue_name}</p>
-        <p class="text-lg mb-2">Total possessions: {len(game_state.possession_history)}</p>
-        <div class="mt-4">
+        <div class="mb-4">
+            <p class="text-lg mb-2">Game ID: {game_state.game_id}</p>
+            <p class="text-lg mb-2">Mode: {game_state.game_mode.title()}</p>
+            <p class="text-lg mb-2">Score: {red_name} {game_state.red_score} - {game_state.blue_score} {blue_name}</p>
+            <p class="text-lg mb-2">Sets: {red_name} {game_state.red_sets} - {game_state.blue_sets} {blue_name}</p>
+            <p class="text-lg mb-2">Total possessions: {len(game_state.complete_history)}</p>
+        </div>
+        
+        <div class="mt-6">
+            <h3 class="text-xl font-bold mb-4">Advanced Statistics</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300 bg-white rounded-lg">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="py-3 px-4 text-left border-b border-gray-300">Statistic</th>
+                            <th class="py-3 px-4 text-center border-b border-gray-300 text-red-600">{red_name}</th>
+                            <th class="py-3 px-4 text-center border-b border-gray-300 text-blue-600">{blue_name}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {''.join(stats_rows)}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="mt-6">
             <p class="font-bold mb-2">Recent possessions:</p>
-            <p class="text-sm">{', '.join(recent_possessions) if recent_possessions else 'None'}</p>
+            <p class="text-sm font-mono bg-white p-2 rounded border">{', '.join(game_state.possession_history[-15:]) if game_state.possession_history else 'None'}</p>
         </div>
     </div>
     '''
@@ -147,23 +195,28 @@ async def websocket_endpoint(websocket: WebSocket):
                 action = message.get('action')
                 
                 if action:
-                    # Add to possession history
+                    # Add to both possession histories
                     game_state.possession_history.append(action)
-                    print(f"Action received: {action}, history length: {len(game_state.possession_history)}")
+                    game_state.complete_history.append(action)
+                    print(f"Action received: {action}, complete history length: {len(game_state.complete_history)}")
                     
                     # Handle scoring
                     if action == 'g_b':  # Blue goal
                         game_state.blue_score += 1
-                        # Reset history and start at Red 5-bar
+                        # Reset recent history and start at Red 5-bar
                         game_state.possession_history = ['r5']
+                        # Add kickoff to complete history too
+                        game_state.complete_history.append('r5')
                         if game_state.blue_score >= 5:
                             game_state.blue_sets += 1
                             game_state.blue_score = 0
                             game_state.red_score = 0
                     elif action == 'g_r':  # Red goal
                         game_state.red_score += 1
-                        # Reset history and start at Blue 5-bar
+                        # Reset recent history and start at Blue 5-bar
                         game_state.possession_history = ['b5']
+                        # Add kickoff to complete history too
+                        game_state.complete_history.append('b5')
                         if game_state.red_score >= 5:
                             game_state.red_sets += 1
                             game_state.blue_score = 0
