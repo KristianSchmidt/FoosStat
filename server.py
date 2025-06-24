@@ -89,9 +89,25 @@ async def broadcast_score_update():
     </div>
     '''
     
-    # Game history update
+    # Game history update with styled possessions
     recent_history = game_state.possession_history[-10:] if len(game_state.possession_history) > 0 else []
-    history_text = ', '.join(recent_history) if recent_history else 'Game history will appear here'
+    
+    def style_possession(possession):
+        """Style a possession string with proper colors and capitalization"""
+        if possession.startswith('r'):
+            # Red possession
+            return f'<span class="possession-red">{possession.upper()}</span>'
+        elif possession.startswith('b'):
+            # Blue possession  
+            return f'<span class="possession-blue">{possession.upper()}</span>'
+        else:
+            return possession
+    
+    if recent_history:
+        styled_history = [style_possession(p) for p in recent_history]
+        history_text = ' - '.join(styled_history)
+    else:
+        history_text = 'Game history will appear here'
     
     history_html = f'''
     <div id="game-history" hx-swap-oob="true" class="text-sm text-gray-600 mb-3 p-2 bg-gray-50 rounded-xl min-h-[25px] flex items-center justify-center">
