@@ -49,6 +49,19 @@
             touch-action: pan-y;
             width: 100%;
         }
+        
+        /* Style for possession display with proper colors */
+        .possession-red {
+            color: #dc2626; /* Same red as red-600 */
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .possession-blue {
+            color: #2563eb; /* Same blue as blue-600 */
+            font-weight: bold;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body class="bg-gray-100 flex justify-center items-start min-h-screen p-2" hx-ext="ws">
@@ -259,7 +272,57 @@
                 if (currentHistory) {
                     currentHistory.innerHTML = historyUpdate.innerHTML;
                     console.log('Updated game history:', historyUpdate.innerHTML);
+                    // Apply styling immediately after manual update
+                    stylePossessions();
                 }
+            }
+        });
+        
+        // Function to style possessions with proper colors
+        function stylePossessions() {
+            const historyElement = document.getElementById('game-history');
+            if (!historyElement) return;
+            
+            let html = historyElement.innerHTML;
+            
+            // Only apply styling if not already styled (to prevent infinite loops)
+            if (html.includes('possession-red') || html.includes('possession-blue')) {
+                return;
+            }
+            
+            console.log('Applying styling to:', html);
+            
+            // Replace r followed by number with red styling
+            html = html.replace(/\br(\d+)\b/g, '<span class="possession-red">R$1</span>');
+            
+            // Replace b followed by number with blue styling  
+            html = html.replace(/\bb(\d+)\b/g, '<span class="possession-blue">B$1</span>');
+            
+            historyElement.innerHTML = html;
+            console.log('Styled result:', html);
+        }
+        
+        // Set up MutationObserver to watch for game history changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const gameHistory = document.getElementById('game-history');
+            if (gameHistory) {
+                // Apply initial styling
+                stylePossessions();
+                
+                // Watch for changes and style immediately
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                            stylePossessions();
+                        }
+                    });
+                });
+                
+                observer.observe(gameHistory, {
+                    childList: true,
+                    subtree: true,
+                    characterData: true
+                });
             }
         });
     </script>
