@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Manually test the analytics with game state simulation"""
 
 from server import game_state, broadcast_score_update

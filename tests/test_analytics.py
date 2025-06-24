@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Test the analytics engine with sample data"""
 
 from analytics import AnalyticsEngine

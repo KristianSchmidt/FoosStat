@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Test the fixed server logic with complete history tracking"""
 
 from server import game_state
