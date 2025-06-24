@@ -12,7 +12,7 @@
 - **Mobile app**: `mobile/foosstat/` React Native/Expo mobile version
 
 ## Code Style
-- **Python**: Follow FastAPI patterns, use type hints, snake_case naming
+- **Python**: Follow FastAPI patterns, use type hints, snake_case naming. Don't use shebangs for python files.
 - **HTML**: Tailwind CSS classes, HTMX attributes for interactivity
 - **Game state**: Global state pattern with WebSocket broadcasting
 - **Data format**: CSV-like possession tracking (b2,b3,b5,r2,r3,r5,g_b,g_r states)
