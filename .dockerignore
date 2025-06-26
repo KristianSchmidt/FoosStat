@@ -1,0 +1,20 @@
+# Ignore Git and other version control files
+.git
+.gitignore
+
+# Ignore virtual environment
+.venv
+
+# Ignore IDE and editor-specific files
+.vscode/
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore other build artifacts
+.dockerignore
+Dockerfile
+fly.toml
