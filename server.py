@@ -7,6 +7,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
 from analytics import AnalyticsEngine
+import bleach
 
 app = FastAPI()
 
@@ -262,10 +263,10 @@ async def start_game(
 ):
     # Update game state with player info
     game_state.game_mode = game_mode
-    game_state.red_player1 = red_player1.strip()
-    game_state.blue_player1 = blue_player1.strip()
-    game_state.red_player2 = red_player2.strip() if red_player2.strip() else None
-    game_state.blue_player2 = blue_player2.strip() if blue_player2.strip() else None
+    game_state.red_player1 = bleach.clean(red_player1.strip())
+    game_state.blue_player1 = bleach.clean(blue_player1.strip())
+    game_state.red_player2 = bleach.clean(red_player2.strip()) if red_player2.strip() else None
+    game_state.blue_player2 = bleach.clean(blue_player2.strip()) if blue_player2.strip() else None
     
     # Reset scores for new game
     game_state.reset()
