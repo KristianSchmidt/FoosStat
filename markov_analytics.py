@@ -138,7 +138,106 @@ class FoosballMarkovModel:
             'red_scoring_probability': red_score_prob,
             'blue_advantage': blue_score_prob - red_score_prob
         }
-    
+
+    def calculate_set_winning_probability(self, current_score_red: int, current_score_blue: int, 
+                                        current_possession: str, probabilities: Dict[str, Dict[str, float]]) -> float:
+        """
+        Calculate probability of blue winning the set from current state.
+        
+        Args:
+            current_score_red: Current red team score (0-4)
+            current_score_blue: Current blue team score (0-4)  
+            current_possession: 'blue' or 'red' (who starts on 5 bar)
+            probabilities: Dict mapping states to goal probabilities
+            
+        Returns:
+            Probability that blue wins the set (0.0 to 1.0)
+        """
+        # Memoization for dynamic programming
+        memo = {}
+        
+        def dp(red_score: int, blue_score: int, possession: str) -> float:
+            # Base cases
+            if blue_score >= 5:
+                return 1.0  # Blue wins
+            if red_score >= 5:
+                return 0.0  # Red wins
+            
+            # Check memo
+            state_key = (red_score, blue_score, possession)
+            if state_key in memo:
+                return memo[state_key]
+            
+            # Determine possession state (who has ball on 5 bar)
+            if possession == 'blue':
+                state = 'b5'
+            else:
+                state = 'r5'
+            
+            # Get scoring probabilities from current possession
+            blue_goal_prob = probabilities[state]['g_b']
+            red_goal_prob = probabilities[state]['g_r']
+            
+            # Calculate probability blue wins from this state
+            # If blue scores: blue score +1, red gets possession
+            # If red scores: red score +1, blue gets possession
+            prob_blue_wins = (blue_goal_prob * dp(red_score, blue_score + 1, 'red') + 
+                             red_goal_prob * dp(red_score + 1, blue_score, 'blue'))
+            
+            memo[state_key] = prob_blue_wins
+            return prob_blue_wins
+        
+        return dp(current_score_red, current_score_blue, current_possession)
+
+    def print_set_probabilities(self, probabilities: Dict[str, Dict[str, float]]):
+        """Pretty print set winning probabilities for various game states."""
+        print("=== Set Winning Probabilities ===\n")
+        
+        # Common game situations
+        scenarios = [
+            (0, 0, 'blue', "Start of set (Blue serves)"),
+            (0, 0, 'red', "Start of set (Red serves)"),
+            (2, 2, 'blue', "Tied 2-2 (Blue possession)"),
+            (2, 2, 'red', "Tied 2-2 (Red possession)"),
+            (3, 4, 'blue', "Blue leads 4-3 (Blue possession)"),
+            (3, 4, 'red', "Blue leads 4-3 (Red possession)"),
+            (4, 3, 'blue', "Red leads 4-3 (Blue possession)"),
+            (4, 3, 'red', "Red leads 4-3 (Red possession)"),
+            (4, 4, 'blue', "Tied 4-4 (Blue possession)"),
+            (4, 4, 'red', "Tied 4-4 (Red possession)")
+        ]
+        
+        print(f"{'Scenario':<35} {'Blue Win %':<12} {'Red Win %':<12}")
+        print("-" * 65)
+        
+        for red_score, blue_score, possession, description in scenarios:
+            blue_win_prob = self.calculate_set_winning_probability(
+                red_score, blue_score, possession, probabilities
+            )
+            red_win_prob = 1.0 - blue_win_prob
+            
+            print(f"{description:<35} {blue_win_prob*100:>8.1f}%    {red_win_prob*100:>8.1f}%")
+        
+        print()
+        
+        # Show possession advantage
+        print("Possession Advantage Analysis:")
+        print("=" * 40)
+        
+        for red_score in range(5):
+            for blue_score in range(5):
+                blue_poss_prob = self.calculate_set_winning_probability(
+                    red_score, blue_score, 'blue', probabilities
+                )
+                red_poss_prob = self.calculate_set_winning_probability(
+                    red_score, blue_score, 'red', probabilities
+                )
+                advantage = blue_poss_prob - red_poss_prob
+                
+                print(f"Score {red_score}-{blue_score}: Blue possession advantage = {advantage*100:+.1f}%")
+        
+        print()
+
     def print_analysis(self):
         """Print comprehensive analysis of the Markov model."""
         print("=== Foosball Markov Model Analysis ===\n")
@@ -173,6 +272,10 @@ class FoosballMarkovModel:
         print(f"Blue scoring probability: {strengths['blue_scoring_probability']:.3f}")
         print(f"Red scoring probability: {strengths['red_scoring_probability']:.3f}")
         print(f"Blue advantage: {strengths['blue_advantage']:+.3f}")
+        print()
+        
+        # Set winning probabilities
+        self.print_set_probabilities(absorption_probs)
 
 
 def main():
