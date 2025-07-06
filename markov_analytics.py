@@ -270,22 +270,22 @@ class FoosballMarkovModel:
         print()
         
         # Show possession advantage
-        print("Possession Advantage Analysis:")
-        print("=" * 40)
+        # print("Possession Advantage Analysis:")
+        # print("=" * 40)
         
-        for red_score in range(5):
-            for blue_score in range(5):
-                blue_poss_prob = self.calculate_set_winning_probability(
-                    red_score, blue_score, Team.BLUE, probabilities
-                )
-                red_poss_prob = self.calculate_set_winning_probability(
-                    red_score, blue_score, Team.RED, probabilities
-                )
-                advantage = blue_poss_prob - red_poss_prob
+        # for red_score in range(5):
+        #     for blue_score in range(5):
+        #         blue_poss_prob = self.calculate_set_winning_probability(
+        #             red_score, blue_score, Team.BLUE, probabilities
+        #         )
+        #         red_poss_prob = self.calculate_set_winning_probability(
+        #             red_score, blue_score, Team.RED, probabilities
+        #         )
+        #         advantage = blue_poss_prob - red_poss_prob
                 
-                print(f"Score {red_score}-{blue_score}: Blue possession advantage = {advantage*100:+.1f}%")
+        #         print(f"Score {red_score}-{blue_score}: Blue possession advantage = {advantage*100:+.1f}%")
         
-        print()
+        # print()
 
     def print_analysis(self):
         """Print comprehensive analysis of the Markov model."""
@@ -293,8 +293,19 @@ class FoosballMarkovModel:
         
         # Transition matrix
         print("Transition Matrix:")
-        print("States:", [s.value for s in ALL_STATES])
-        print(np.round(self.transition_matrix, 3))
+        matrix_rounded = np.round(self.transition_matrix, 3)
+        
+        # Create pretty-printed matrix with row and column labels
+        state_labels = [s.value for s in ALL_STATES]
+        
+        # Print column headers
+        print("       " + "".join(f"{label:>8}" for label in state_labels))
+        print("     " + "-" * (8 * len(state_labels) + 2))
+        
+        # Print each row with row label
+        for i, row_label in enumerate(state_labels):
+            row_values = "".join(f"{matrix_rounded[i][j]:8.3f}" for j in range(len(state_labels)))
+            print(f"{row_label:>4} | {row_values}")
         print()
         
         # Absorption probabilities
