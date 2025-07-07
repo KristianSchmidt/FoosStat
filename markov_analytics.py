@@ -7,7 +7,7 @@ and calculate scoring probabilities from different game states.
 
 import numpy as np
 import numpy.typing as npt
-from typing import Dict, List, Tuple, TypeAlias, Mapping
+from typing import Dict, List, Tuple, TypeAlias, Mapping, Optional
 from collections import defaultdict, Counter
 from enum import Enum
 from dataclasses import dataclass
@@ -50,6 +50,61 @@ class Score:
     """Represents a game score."""
     red: int
     blue: int
+
+
+@dataclass(frozen=True)
+class SetState:
+    """Represents the state of a single set."""
+    red_score: int
+    blue_score: int
+    possession: Team
+    is_fifth_set: bool = False
+    
+    @property
+    def is_finished(self) -> bool:
+        """Check if the set is complete."""
+        if self.is_fifth_set:
+            # Fifth set: win by 2 goals with maximum of 8 goals
+            if max(self.red_score, self.blue_score) >= 8:
+                return True
+            if max(self.red_score, self.blue_score) >= 5:
+                return abs(self.red_score - self.blue_score) >= 2
+            return False
+        else:
+            # Regular sets: first to 5 goals
+            return self.red_score >= 5 or self.blue_score >= 5
+    
+    @property
+    def winner(self) -> Team:
+        """Get the winner of the set (only valid if is_finished is True)."""
+        if not self.is_finished:
+            raise ValueError("Set is not finished")
+        return Team.BLUE if self.blue_score > self.red_score else Team.RED
+
+
+@dataclass(frozen=True)
+class FullGameState:
+    """Represents the complete game state."""
+    sets_won_red: int
+    sets_won_blue: int
+    current_set: SetState
+    
+    @property
+    def is_finished(self) -> bool:
+        """Check if the game is complete (best of 5)."""
+        return self.sets_won_red >= 3 or self.sets_won_blue >= 3
+    
+    @property
+    def winner(self) -> Team:
+        """Get the winner of the game (only valid if is_finished is True)."""
+        if not self.is_finished:
+            raise ValueError("Game is not finished")
+        return Team.BLUE if self.sets_won_blue >= 3 else Team.RED
+    
+    @property
+    def is_fifth_set(self) -> bool:
+        """Check if we're in the fifth set (both teams have won 2 sets)."""
+        return self.sets_won_red == 2 and self.sets_won_blue == 2
 
 
 # Type aliases
@@ -114,7 +169,7 @@ class FoosballMarkovModel:
                 self.transition_counts[from_state][to_state] += 1
         
         # Convert counts to probabilities
-        for from_state in TRANSIENT_STATES:
+        for from_state in ALL_STATES:
             from_idx = STATE_INDEX[from_state]
             total_transitions = sum(self.transition_counts[from_state].values())
             
@@ -192,7 +247,8 @@ class FoosballMarkovModel:
         }
 
     def calculate_set_winning_probability(self, current_score_red: int, current_score_blue: int, 
-                                        current_possession: Team, probabilities: AbsorptionProb) -> float:
+                                        current_possession: Team, probabilities: AbsorptionProb, 
+                                        is_fifth_set: bool = False) -> float:
         """
         Calculate probability of blue winning the set from current state.
         
@@ -210,10 +266,20 @@ class FoosballMarkovModel:
         
         def dp(red_score: int, blue_score: int, possession: Team) -> float:
             # Base cases
-            if blue_score >= 5:
-                return 1.0  # Blue wins
-            if red_score >= 5:
-                return 0.0  # Red wins
+            if is_fifth_set:
+                # Fifth set: win by 2 goals with maximum of 8 goals
+                if max(red_score, blue_score) >= 8:
+                    return 1.0 if blue_score > red_score else 0.0
+                if max(red_score, blue_score) >= 5:
+                    if abs(red_score - blue_score) >= 2:
+                        return 1.0 if blue_score > red_score else 0.0
+                # Game continues
+            else:
+                # Regular sets: first to 5 goals
+                if blue_score >= 5:
+                    return 1.0  # Blue wins
+                if red_score >= 5:
+                    return 0.0  # Red wins
             
             # Check memo
             state_key = (red_score, blue_score, possession)
@@ -244,24 +310,30 @@ class FoosballMarkovModel:
         
         # Common game situations
         scenarios = [
-            (0, 0, Team.BLUE, "Start of set (Blue serves)"),
-            (0, 0, Team.RED, "Start of set (Red serves)"),
-            (2, 2, Team.BLUE, "Tied 2-2 (Blue possession)"),
-            (2, 2, Team.RED, "Tied 2-2 (Red possession)"),
-            (3, 4, Team.BLUE, "Blue leads 4-3 (Blue possession)"),
-            (3, 4, Team.RED, "Blue leads 4-3 (Red possession)"),
-            (4, 3, Team.BLUE, "Red leads 4-3 (Blue possession)"),
-            (4, 3, Team.RED, "Red leads 4-3 (Red possession)"),
-            (4, 4, Team.BLUE, "Tied 4-4 (Blue possession)"),
-            (4, 4, Team.RED, "Tied 4-4 (Red possession)")
+            (0, 0, Team.BLUE, "Start of set (Blue serves)", False),
+            (0, 0, Team.RED, "Start of set (Red serves)", False),
+            (2, 2, Team.BLUE, "Tied 2-2 (Blue possession)", False),
+            (2, 2, Team.RED, "Tied 2-2 (Red possession)", False),
+            (3, 4, Team.BLUE, "Blue leads 4-3 (Blue possession)", False),
+            (3, 4, Team.RED, "Blue leads 4-3 (Red possession)", False),
+            (4, 3, Team.BLUE, "Red leads 4-3 (Blue possession)", False),
+            (4, 3, Team.RED, "Red leads 4-3 (Red possession)", False),
+            (4, 4, Team.BLUE, "Tied 4-4 (Blue possession)", False),
+            (4, 4, Team.RED, "Tied 4-4 (Red possession)", False),
+            (5, 5, Team.BLUE, "Fifth set 5-5 (Blue possession)", True),
+            (5, 5, Team.RED, "Fifth set 5-5 (Red possession)", True),
+            (6, 6, Team.BLUE, "Fifth set 6-6 (Blue possession)", True),
+            (6, 6, Team.RED, "Fifth set 6-6 (Red possession)", True),
+            (7, 6, Team.BLUE, "Fifth set 7-6 (Blue possession)", True),
+            (7, 6, Team.RED, "Fifth set 7-6 (Red possession)", True),
         ]
         
         print(f"{'Scenario':<35} {'Blue Win %':<12} {'Red Win %':<12}")
         print("-" * 65)
         
-        for red_score, blue_score, possession, description in scenarios:
+        for red_score, blue_score, possession, description, is_fifth_set in scenarios:
             blue_win_prob = self.calculate_set_winning_probability(
-                red_score, blue_score, possession, probabilities
+                red_score, blue_score, possession, probabilities, is_fifth_set
             )
             red_win_prob = 1.0 - blue_win_prob
             
@@ -338,6 +410,417 @@ class FoosballMarkovModel:
         self.print_set_probabilities(absorption_probs)
 
 
+class LiveGameTracker:
+    """Tracks a live game and calculates win probabilities using incremental data."""
+    
+    def __init__(self):
+        self.game_state = FullGameState(
+            sets_won_red=0,
+            sets_won_blue=0,
+            current_set=SetState(red_score=0, blue_score=0, possession=Team.BLUE, is_fifth_set=False)
+        )
+        # Track ALL possessions throughout the entire game
+        self.all_possession_sequences: List[List[GameState]] = []
+        self.current_possession_sequence: List[GameState] = []
+        self.markov_model = FoosballMarkovModel()
+        
+        # Performance optimizations
+        self._cached_model: Optional[FoosballMarkovModel] = None
+        self._cached_model_total_sequences: int = 0
+        self._cached_absorption_probs: Optional[AbsorptionProb] = None
+        
+        # Confidence tracking
+        self.total_possessions: int = 0
+        self.total_goals: int = 0
+        
+    def add_possession(self, state: GameState):
+        """Add a possession to the current sequence."""
+        self.current_possession_sequence.append(state)
+        self.total_possessions += 1
+        
+    def score_goal(self, scoring_team: Team):
+        """Record a goal and update game state."""
+        # Add goal state to current sequence
+        goal_state = GameState.GOAL_BLUE if scoring_team == Team.BLUE else GameState.GOAL_RED
+        self.current_possession_sequence.append(goal_state)
+        
+        # Add current possession sequence to complete history
+        if len(self.current_possession_sequence) > 1:
+            self.all_possession_sequences.append(self.current_possession_sequence.copy())
+        
+        # Invalidate cache since we have new data
+        self._cached_model = None
+        self._cached_absorption_probs = None
+        
+        # Update counters
+        self.total_goals += 1
+        
+        # Update set score
+        if scoring_team == Team.BLUE:
+            new_blue_score = self.game_state.current_set.blue_score + 1
+            new_red_score = self.game_state.current_set.red_score
+        else:
+            new_blue_score = self.game_state.current_set.blue_score
+            new_red_score = self.game_state.current_set.red_score + 1
+        
+        # Determine who gets possession after goal (opponent serves)
+        next_possession = Team.RED if scoring_team == Team.BLUE else Team.BLUE
+        
+        # Create new set state
+        new_set = SetState(
+            red_score=new_red_score,
+            blue_score=new_blue_score,
+            possession=next_possession,
+            is_fifth_set=self.game_state.is_fifth_set
+        )
+        
+        # Check if set is finished
+        if new_set.is_finished:
+            # Update sets won
+            if scoring_team == Team.BLUE:
+                new_sets_blue = self.game_state.sets_won_blue + 1
+                new_sets_red = self.game_state.sets_won_red
+            else:
+                new_sets_blue = self.game_state.sets_won_blue
+                new_sets_red = self.game_state.sets_won_red + 1
+            
+            # Start new set (winner of previous set serves)
+            # Check if next set will be the fifth set
+            is_next_fifth_set = new_sets_red == 2 and new_sets_blue == 2
+            new_set = SetState(red_score=0, blue_score=0, possession=scoring_team, is_fifth_set=is_next_fifth_set)
+            
+            self.game_state = FullGameState(
+                sets_won_red=new_sets_red,
+                sets_won_blue=new_sets_blue,
+                current_set=new_set
+            )
+        else:
+            # Update current set
+            self.game_state = FullGameState(
+                sets_won_red=self.game_state.sets_won_red,
+                sets_won_blue=self.game_state.sets_won_blue,
+                current_set=new_set
+            )
+        
+        # Reset possession sequence for next point
+        self.current_possession_sequence = []
+        
+    def build_incremental_model(self) -> FoosballMarkovModel:
+        """Build Markov model from ALL possession history so far in the entire game."""
+        # Include current in-progress sequence if it has useful data
+        all_sequences = self.all_possession_sequences.copy()
+        if len(self.current_possession_sequence) > 1:
+            all_sequences.append(self.current_possession_sequence.copy())
+        
+        # Use cached model if available and data hasn't changed
+        total_sequences = len(all_sequences)
+        if (self._cached_model is not None and 
+            self._cached_model_total_sequences == total_sequences):
+            return self._cached_model
+        
+        model = FoosballMarkovModel()
+        model.build_transition_matrix(all_sequences)
+        
+        # Cache the model
+        self._cached_model = model
+        self._cached_model_total_sequences = total_sequences
+        
+        return model
+        
+    def calculate_set_win_probability(self) -> float:
+        """Calculate probability of blue winning current set."""
+        if self.game_state.current_set.is_finished:
+            return 1.0 if self.game_state.current_set.winner == Team.BLUE else 0.0
+            
+        # Get current scores
+        blue_score = self.game_state.current_set.blue_score
+        red_score = self.game_state.current_set.red_score
+        total_score = blue_score + red_score
+        
+        # Handle case where we don't have enough data yet
+        if len(self.all_possession_sequences) < 3:
+            if total_score == 0:
+                return 0.5  # No data, assume equal probability
+            
+            # Simple heuristic: current score proportion with some uncertainty
+            print("here1")
+            return min(max(blue_score / total_score, 0.1), 0.9)
+        
+        # Build model from data so far
+        model = self.build_incremental_model()
+        
+        # Check if model has valid data
+        if len(model.transition_counts) == 0:
+            # No transitions recorded, fall back to score-based
+            if total_score == 0:
+                return 0.5
+            print("here2")
+            return min(max(blue_score / total_score, 0.1), 0.9)
+        
+        # Use Markov model
+        try:
+            absorption_probs = model.get_absorption_probabilities()
+            
+            # Check if absorption probabilities are reasonable
+            has_valid_probs = any(
+                sum(absorption_probs[state].values()) > 0.001
+                for state in absorption_probs if state in absorption_probs
+            )
+            
+            if not has_valid_probs:
+                # Fall back to score-based heuristic
+                if total_score == 0:
+                    return 0.5
+                print("here3")
+                return min(max(blue_score / total_score, 0.1), 0.9)
+            
+            markov_result = model.calculate_set_winning_probability(
+                red_score,
+                blue_score,
+                self.game_state.current_set.possession,
+                absorption_probs,
+                self.game_state.is_fifth_set
+            )
+            
+            # Debug: Check if result seems reasonable
+            if total_score > 0:
+                score_based = blue_score / total_score
+                # If Markov result is drastically different from score-based and score difference is significant
+                if abs(markov_result - score_based) > 0.6 and abs(blue_score - red_score) >= 2:
+                    # Blend the results when there's high disagreement and clear score advantage
+                    print("here4")
+                    return 0.6 * markov_result + 0.4 * min(max(score_based, 0.1), 0.9)
+            
+            return markov_result
+            
+        except Exception:
+            # If anything fails, use score-based fallback
+            if total_score == 0:
+                return 0.5
+            print("here5")
+            return min(max(blue_score / total_score, 0.1), 0.9)
+    
+    def calculate_game_win_probability(self) -> float:
+        """Calculate probability of blue winning the entire game."""
+        if self.game_state.is_finished:
+            return 1.0 if self.game_state.winner == Team.BLUE else 0.0
+        
+        # Get current set probability
+        set_prob = self.calculate_set_win_probability()
+        
+        # Use dynamic programming for game-level calculation
+        memo: Dict[Tuple[int, int, float], float] = {}
+        
+        def dp(blue_sets: int, red_sets: int, current_set_prob: float) -> float:
+            # Base cases
+            if blue_sets >= 3:
+                return 1.0
+            if red_sets >= 3:
+                return 0.0
+            
+            # Check memo
+            state_key = (blue_sets, red_sets, round(current_set_prob, 3))
+            if state_key in memo:
+                return memo[state_key]
+            
+            # Calculate probability
+            # If blue wins current set
+            prob_blue_wins_set = current_set_prob * dp(blue_sets + 1, red_sets, 0.5)
+            # If red wins current set  
+            prob_red_wins_set = (1 - current_set_prob) * dp(blue_sets, red_sets + 1, 0.5)
+            
+            result = prob_blue_wins_set + prob_red_wins_set
+            memo[state_key] = result
+            return result
+        
+        return dp(
+            self.game_state.sets_won_blue,
+            self.game_state.sets_won_red,
+            set_prob
+        )
+    
+    def calculate_confidence_metrics(self) -> Dict[str, float]:
+        """Calculate sophisticated confidence metrics."""
+        # Data quantity confidence
+        data_confidence = min(len(self.all_possession_sequences) / 15.0, 1.0)
+        
+        # Data quality confidence (based on transition diversity)
+        quality_confidence = 1.0
+        if len(self.all_possession_sequences) > 0:
+            model = self.build_incremental_model()
+            # Check how many different transitions we've seen
+            total_transitions = sum(
+                sum(model.transition_counts[from_state].values()) 
+                for from_state in model.transition_counts
+            )
+            unique_transitions = sum(
+                len(model.transition_counts[from_state]) 
+                for from_state in model.transition_counts
+            )
+            
+            if total_transitions > 0:
+                quality_confidence = min(unique_transitions / total_transitions, 1.0)
+        
+        # Game progress confidence (later in game = more confident)
+        game_progress = (self.total_goals) / 20.0  # Assume ~20 goals per game
+        progress_confidence = min(game_progress, 1.0)
+        
+        # Combined confidence
+        overall_confidence = (data_confidence * 0.4 + 
+                            quality_confidence * 0.3 + 
+                            progress_confidence * 0.3)
+        
+        return {
+            'data_confidence': data_confidence,
+            'quality_confidence': quality_confidence, 
+            'progress_confidence': progress_confidence,
+            'overall_confidence': overall_confidence
+        }
+    
+    def get_current_probabilities(self) -> Dict[str, float]:
+        """Get current set and game win probabilities."""
+        set_prob = self.calculate_set_win_probability()
+        game_prob = self.calculate_game_win_probability()
+        confidence_metrics = self.calculate_confidence_metrics()
+        
+        return {
+            'set_win_prob_blue': set_prob,
+            'set_win_prob_red': 1.0 - set_prob,
+            'game_win_prob_blue': game_prob,
+            'game_win_prob_red': 1.0 - game_prob,
+            'confidence': confidence_metrics['overall_confidence'],
+            'confidence_breakdown': confidence_metrics
+        }
+    
+    def format_live_update(self, detailed: bool = False) -> str:
+        """Format current state for live display."""
+        probs = self.get_current_probabilities()
+        
+        # Game state summary
+        sets_display = f"Sets: {self.game_state.sets_won_red}-{self.game_state.sets_won_blue}"
+        score_display = f"Score: {self.game_state.current_set.red_score}-{self.game_state.current_set.blue_score}"
+        
+        # Probability display with confidence indicators
+        conf = probs['confidence']
+        conf_indicator = "🔴" if conf < 0.3 else "🟡" if conf < 0.7 else "🟢"
+        
+        # Format probabilities as percentages
+        set_blue_pct = probs['set_win_prob_blue'] * 100
+        set_red_pct = probs['set_win_prob_red'] * 100
+        game_blue_pct = probs['game_win_prob_blue'] * 100
+        game_red_pct = probs['game_win_prob_red'] * 100
+        
+        # Create progress bars
+        def create_bar(blue_pct: float, width: int = 20) -> str:
+            blue_width = int(blue_pct * width / 100)
+            red_width = width - blue_width
+            return "█" * blue_width + "▓" * red_width
+        
+        set_bar = create_bar(set_blue_pct)
+        game_bar = create_bar(game_blue_pct)
+        
+        # Basic display
+        output = [
+            f"{conf_indicator} {sets_display} | {score_display}",
+            f"Set:  [{set_bar}] B:{set_blue_pct:5.1f}% R:{set_red_pct:5.1f}%",
+            f"Game: [{game_bar}] B:{game_blue_pct:5.1f}% R:{game_red_pct:5.1f}%",
+            f"Confidence: {conf:.3f}"
+        ]
+        
+        # Detailed display
+        if detailed:
+            breakdown = probs['confidence_breakdown']
+            output.extend([
+                "",
+                f"Data Quality: {breakdown['data_confidence']:.2f}",
+                f"Transition Diversity: {breakdown['quality_confidence']:.2f}",
+                f"Game Progress: {breakdown['progress_confidence']:.2f}",
+                f"Possession: {self.game_state.current_set.possession.value}",
+                f"Total Goals: {self.total_goals}, Possessions: {self.total_possessions}"
+            ])
+        
+        return "\n".join(output)
+    
+    def get_data_stats(self) -> Dict[str, int]:
+        """Get statistics about the data being used for calculations."""
+        all_sequences = self.all_possession_sequences.copy()
+        if len(self.current_possession_sequence) > 1:
+            all_sequences.append(self.current_possession_sequence.copy())
+        
+        total_possessions_in_sequences = sum(len(seq) for seq in all_sequences)
+        
+        return {
+            'total_sequences': len(all_sequences),
+            'completed_sequences': len(self.all_possession_sequences),
+            'current_sequence_length': len(self.current_possession_sequence),
+            'total_possessions_in_model': total_possessions_in_sequences,
+            'total_possessions_tracked': self.total_possessions,
+            'total_goals': self.total_goals
+        }
+
+
+def demo_live_tracker():
+    """Demonstrate live game tracking with historical data."""
+    print("=== Live Game Tracker Demo ===\n")
+    
+    tracker = LiveGameTracker()
+    
+    # Simulate a game using historical data
+    with open('games/data.txt', 'r') as f:
+        current_set = 1
+        
+        for line in f:
+            line = line.strip()
+            if line.startswith('set '):
+                current_set = int(line.split()[1])
+                print(f"\n{'='*50}")
+                print(f"SET {current_set}")
+                print(f"{'='*50}")
+                continue
+            elif not line:
+                continue
+            
+            # Parse possession sequence
+            tokens = [s.strip() for s in line.split(',')]
+            valid_states = [TOKEN_TO_STATE[t] for t in tokens if t in TOKEN_TO_STATE]
+            
+            if len(valid_states) < 2:
+                continue
+                
+            # Add possessions to tracker
+            for i in range(len(valid_states) - 1):
+                tracker.add_possession(valid_states[i])
+            
+            # Determine who scored
+            final_state = valid_states[-1]
+            if final_state == GameState.GOAL_BLUE:
+                scoring_team = Team.BLUE
+            elif final_state == GameState.GOAL_RED:
+                scoring_team = Team.RED
+            else:
+                continue  # Not a goal
+            
+            # Record the goal
+            tracker.score_goal(scoring_team)
+            
+            # Show enhanced live display
+            print(tracker.format_live_update(detailed=False))
+            
+            # Show data stats for the first few goals to demonstrate incremental learning
+            if tracker.total_goals <= 5:
+                stats = tracker.get_data_stats()
+                print(f"  → Based on {stats['total_possessions_in_model']} possessions from {stats['total_sequences']} sequences")
+            print()
+            
+            # Break if game is finished
+            if tracker.game_state.is_finished:
+                print("="*50)
+                print(f"🏆 GAME FINISHED! Winner: {tracker.game_state.winner.value.upper()}")
+                print("="*50)
+                print(tracker.format_live_update(detailed=True))
+                break
+
+
 def main():
     """Example usage with sample data."""
     model = FoosballMarkovModel()
@@ -370,6 +853,10 @@ def main():
     # Build and analyze model
     model.build_transition_matrix(sequences)
     model.print_analysis()
+    
+    # Demo live tracker
+    print("\n" + "="*50)
+    demo_live_tracker()
 
 
 if __name__ == "__main__":
