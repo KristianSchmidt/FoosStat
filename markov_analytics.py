@@ -214,38 +214,7 @@ class FoosballMarkovModel:
                 result[from_state][absorbing_state] = B[i][j]
         
         return result
-    
-    def get_expected_steps_to_absorption(self) -> Dict[GameState, float]:
-        """Calculate expected number of steps to reach an absorbing state."""
-        n_transient = len(TRANSIENT_STATES)
-        Q = self.transition_matrix[:n_transient, :n_transient]
         
-        I = np.eye(n_transient)
-        try:
-            N = np.linalg.inv(I - Q)
-        except np.linalg.LinAlgError:
-            N = np.linalg.pinv(I - Q)
-        
-        # Expected steps = sum of each row in fundamental matrix
-        expected_steps = N.sum(axis=1)
-        
-        return {state: steps for state, steps in zip(TRANSIENT_STATES, expected_steps)}
-    
-    def analyze_team_strengths(self) -> Dict[str, float]:
-        """Analyze overall team strengths based on scoring probabilities."""
-        absorption_probs = self.get_absorption_probabilities()
-        
-        blue_score_prob = sum(absorption_probs[state][GameState.GOAL_BLUE] * POSSESSION_WEIGHTS[state] 
-                             for state in TRANSIENT_STATES)
-        red_score_prob = sum(absorption_probs[state][GameState.GOAL_RED] * POSSESSION_WEIGHTS[state] 
-                            for state in TRANSIENT_STATES)
-        
-        return {
-            'blue_scoring_probability': blue_score_prob,
-            'red_scoring_probability': red_score_prob,
-            'blue_advantage': blue_score_prob - red_score_prob
-        }
-
     def calculate_set_winning_probability(self, current_score_red: int, current_score_blue: int, 
                                         current_possession: Team, probabilities: AbsorptionProb, 
                                         is_fifth_set: bool = False) -> float:
@@ -341,24 +310,6 @@ class FoosballMarkovModel:
         
         print()
         
-        # Show possession advantage
-        # print("Possession Advantage Analysis:")
-        # print("=" * 40)
-        
-        # for red_score in range(5):
-        #     for blue_score in range(5):
-        #         blue_poss_prob = self.calculate_set_winning_probability(
-        #             red_score, blue_score, Team.BLUE, probabilities
-        #         )
-        #         red_poss_prob = self.calculate_set_winning_probability(
-        #             red_score, blue_score, Team.RED, probabilities
-        #         )
-        #         advantage = blue_poss_prob - red_poss_prob
-                
-        #         print(f"Score {red_score}-{blue_score}: Blue possession advantage = {advantage*100:+.1f}%")
-        
-        # print()
-
     def print_analysis(self):
         """Print comprehensive analysis of the Markov model."""
         print("=== Foosball Markov Model Analysis ===\n")
@@ -391,21 +342,6 @@ class FoosballMarkovModel:
             print(f"{state.value:<5} {blue_prob:<12.3f} {red_prob:<12.3f}")
         print()
         
-        # Expected steps to goal
-        expected_steps = self.get_expected_steps_to_absorption()
-        print("Expected Possessions Until Goal:")
-        for state, steps in expected_steps.items():
-            print(f"{state.value}: {steps:.2f}")
-        print()
-        
-        # Team strengths
-        strengths = self.analyze_team_strengths()
-        print("Overall Team Analysis:")
-        print(f"Blue scoring probability: {strengths['blue_scoring_probability']:.3f}")
-        print(f"Red scoring probability: {strengths['red_scoring_probability']:.3f}")
-        print(f"Blue advantage: {strengths['blue_advantage']:+.3f}")
-        print()
-        
         # Set winning probabilities
         self.print_set_probabilities(absorption_probs)
 
@@ -429,7 +365,6 @@ class LiveGameTracker:
         self._cached_model_total_sequences: int = 0
         self._cached_absorption_probs: Optional[AbsorptionProb] = None
         
-        # Confidence tracking
         self.total_possessions: int = 0
         self.total_goals: int = 0
         
@@ -638,71 +573,26 @@ class LiveGameTracker:
             self.game_state.sets_won_red,
             set_prob
         )
-    
-    def calculate_confidence_metrics(self) -> Dict[str, float]:
-        """Calculate sophisticated confidence metrics."""
-        # Data quantity confidence
-        data_confidence = min(len(self.all_possession_sequences) / 15.0, 1.0)
         
-        # Data quality confidence (based on transition diversity)
-        quality_confidence = 1.0
-        if len(self.all_possession_sequences) > 0:
-            model = self.build_incremental_model()
-            # Check how many different transitions we've seen
-            total_transitions = sum(
-                sum(model.transition_counts[from_state].values()) 
-                for from_state in model.transition_counts
-            )
-            unique_transitions = sum(
-                len(model.transition_counts[from_state]) 
-                for from_state in model.transition_counts
-            )
-            
-            if total_transitions > 0:
-                quality_confidence = min(unique_transitions / total_transitions, 1.0)
-        
-        # Game progress confidence (later in game = more confident)
-        game_progress = (self.total_goals) / 20.0  # Assume ~20 goals per game
-        progress_confidence = min(game_progress, 1.0)
-        
-        # Combined confidence
-        overall_confidence = (data_confidence * 0.4 + 
-                            quality_confidence * 0.3 + 
-                            progress_confidence * 0.3)
-        
-        return {
-            'data_confidence': data_confidence,
-            'quality_confidence': quality_confidence, 
-            'progress_confidence': progress_confidence,
-            'overall_confidence': overall_confidence
-        }
-    
     def get_current_probabilities(self) -> Dict[str, float]:
         """Get current set and game win probabilities."""
         set_prob = self.calculate_set_win_probability()
         game_prob = self.calculate_game_win_probability()
-        confidence_metrics = self.calculate_confidence_metrics()
         
         return {
             'set_win_prob_blue': set_prob,
             'set_win_prob_red': 1.0 - set_prob,
             'game_win_prob_blue': game_prob,
             'game_win_prob_red': 1.0 - game_prob,
-            'confidence': confidence_metrics['overall_confidence'],
-            'confidence_breakdown': confidence_metrics
         }
     
-    def format_live_update(self, detailed: bool = False) -> str:
+    def format_live_update(self) -> str:
         """Format current state for live display."""
         probs = self.get_current_probabilities()
         
         # Game state summary
         sets_display = f"Sets: {self.game_state.sets_won_red}-{self.game_state.sets_won_blue}"
         score_display = f"Score: {self.game_state.current_set.red_score}-{self.game_state.current_set.blue_score}"
-        
-        # Probability display with confidence indicators
-        conf = probs['confidence']
-        conf_indicator = "🔴" if conf < 0.3 else "🟡" if conf < 0.7 else "🟢"
         
         # Format probabilities as percentages
         set_blue_pct = probs['set_win_prob_blue'] * 100
@@ -721,24 +611,11 @@ class LiveGameTracker:
         
         # Basic display - match score order (Red-Blue)
         output = [
-            f"{conf_indicator} {sets_display} | {score_display}",
+            f"{sets_display} | {score_display}",
             f"Set:  [{set_bar}] R:{set_red_pct:5.1f}% B:{set_blue_pct:5.1f}%",
             f"Game: [{game_bar}] R:{game_red_pct:5.1f}% B:{game_blue_pct:5.1f}%",
-            f"Confidence: {conf:.3f}"
         ]
-        
-        # Detailed display
-        if detailed:
-            breakdown = probs['confidence_breakdown']
-            output.extend([
-                "",
-                f"Data Quality: {breakdown['data_confidence']:.2f}",
-                f"Transition Diversity: {breakdown['quality_confidence']:.2f}",
-                f"Game Progress: {breakdown['progress_confidence']:.2f}",
-                f"Possession: {self.game_state.current_set.possession.value}",
-                f"Total Goals: {self.total_goals}, Possessions: {self.total_possessions}"
-            ])
-        
+                
         return "\n".join(output)
     
     def get_data_stats(self) -> Dict[str, int]:
@@ -804,7 +681,7 @@ def demo_live_tracker():
             tracker.score_goal(scoring_team)
             
             # Show enhanced live display
-            print(tracker.format_live_update(detailed=False))
+            print(tracker.format_live_update())
             
             # Show data stats for the first few goals to demonstrate incremental learning
             if tracker.total_goals <= 5:
@@ -817,7 +694,7 @@ def demo_live_tracker():
                 print("="*50)
                 print(f"🏆 GAME FINISHED! Winner: {tracker.game_state.winner.value.upper()}")
                 print("="*50)
-                print(tracker.format_live_update(detailed=True))
+                print(tracker.format_live_update())
                 break
 
 
