@@ -719,11 +719,11 @@ class LiveGameTracker:
         set_bar = create_bar(set_blue_pct)
         game_bar = create_bar(game_blue_pct)
         
-        # Basic display
+        # Basic display - match score order (Red-Blue)
         output = [
             f"{conf_indicator} {sets_display} | {score_display}",
-            f"Set:  [{set_bar}] B:{set_blue_pct:5.1f}% R:{set_red_pct:5.1f}%",
-            f"Game: [{game_bar}] B:{game_blue_pct:5.1f}% R:{game_red_pct:5.1f}%",
+            f"Set:  [{set_bar}] R:{set_red_pct:5.1f}% B:{set_blue_pct:5.1f}%",
+            f"Game: [{game_bar}] R:{game_red_pct:5.1f}% B:{game_blue_pct:5.1f}%",
             f"Confidence: {conf:.3f}"
         ]
         
