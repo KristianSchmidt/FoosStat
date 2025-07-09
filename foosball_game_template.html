@@ -70,6 +70,7 @@
         <div class="flex mb-4 border-b border-gray-200">
             <button id="tab-entry" class="py-2 px-4 font-medium text-blue-600 border-b-2 border-blue-600 tab-button">Entry</button>
             <button id="tab-stats" class="py-2 px-4 font-medium text-gray-500 tab-button">Stats</button>
+            <button id="tab-markov" class="py-2 px-4 font-medium text-gray-500 tab-button">Markov</button>
         </div>
         
         <!-- Tab Content -->
@@ -146,6 +147,16 @@
                     <h2 class="text-2xl font-bold text-center mb-4">Game Statistics</h2>
                     <div id="stats-content" class="p-4 bg-gray-50 rounded-xl">
                         <p class="text-lg mb-2">Waiting for game data...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Markov Tab -->
+            <div id="content-markov" class="tab-content hidden">
+                <div class="flex flex-col gap-4">
+                    <h2 class="text-2xl font-bold text-center mb-4">Markov Analytics</h2>
+                    <div id="markov-content" class="p-4 bg-gray-50 rounded-xl">
+                        <p class="text-lg mb-2">Analyzing game patterns...</p>
                     </div>
                 </div>
             </div>
@@ -239,9 +250,15 @@
             if (currentTab === 'content-entry' && swipeDistance < 0) {
                 // Swipe left from Entry to Stats
                 activateTab('stats');
+            } else if (currentTab === 'content-stats' && swipeDistance < 0) {
+                // Swipe left from Stats to Markov
+                activateTab('markov');
             } else if (currentTab === 'content-stats' && swipeDistance > 0) {
                 // Swipe right from Stats to Entry
                 activateTab('entry');
+            } else if (currentTab === 'content-markov' && swipeDistance > 0) {
+                // Swipe right from Markov to Stats
+                activateTab('stats');
             }
         }
         

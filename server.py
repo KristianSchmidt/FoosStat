@@ -7,6 +7,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
 from analytics import AnalyticsEngine
+from markov_analytics import LiveGameTracker, Team, GameState as MarkovGameState
 import bleach
 
 app = FastAPI()
@@ -26,6 +27,7 @@ class GameState:
         self.red_player2: Optional[str] = None
         self.blue_player1 = "Blue"
         self.blue_player2: Optional[str] = None
+        self.markov_tracker = LiveGameTracker()
         
     def reset(self):
         self.game_id = str(uuid.uuid4())
@@ -35,6 +37,7 @@ class GameState:
         self.red_sets = 0
         self.possession_history = []
         self.complete_history = []
+        self.markov_tracker = LiveGameTracker()
         
     def get_red_display_name(self):
         """Get last name for red team display"""
@@ -144,6 +147,9 @@ async def broadcast_score_update():
         </tr>
         ''')
     
+    # Get markov probabilities
+    markov_probs = game_state.markov_tracker.get_current_probabilities()
+    
     stats_html = f'''
     <div id="stats-content" hx-swap-oob="true" class="p-4 bg-gray-50 rounded-xl">
         <div class="mb-4">
@@ -179,7 +185,51 @@ async def broadcast_score_update():
     </div>
     '''
     
-    message = score_html + history_html + stats_html
+    # Generate markov stats content
+    markov_html = f'''
+    <div id="markov-content" hx-swap-oob="true" class="p-4 bg-gray-50 rounded-xl">
+        <div class="mb-4">
+            <h3 class="text-xl font-bold mb-4">Markov Analytics</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white p-4 rounded-lg border">
+                    <h4 class="font-bold mb-2">Current Set Win Probability</h4>
+                    <div class="text-center">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-red-600 font-mono">{red_name}</span>
+                            <span class="text-blue-600 font-mono">{blue_name}</span>
+                        </div>
+                        <div class="bg-gray-200 rounded-full h-6 mb-2">
+                            <div class="bg-blue-500 h-6 rounded-full" style="width: {markov_probs['set_win_prob_blue']*100:.1f}%"></div>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-red-600">{markov_probs['set_win_prob_red']*100:.1f}%</span>
+                            <span class="text-blue-600">{markov_probs['set_win_prob_blue']*100:.1f}%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg border">
+                    <h4 class="font-bold mb-2">Match Win Probability</h4>
+                    <div class="text-center">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-red-600 font-mono">{red_name}</span>
+                            <span class="text-blue-600 font-mono">{blue_name}</span>
+                        </div>
+                        <div class="bg-gray-200 rounded-full h-6 mb-2">
+                            <div class="bg-blue-500 h-6 rounded-full" style="width: {markov_probs['game_win_prob_blue']*100:.1f}%"></div>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-red-600">{markov_probs['game_win_prob_red']*100:.1f}%</span>
+                            <span class="text-blue-600">{markov_probs['game_win_prob_blue']*100:.1f}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    '''
+    
+    message = score_html + history_html + stats_html + markov_html
     
     disconnected = []
     for websocket in connected_websockets:
@@ -217,8 +267,14 @@ async def websocket_endpoint(websocket: WebSocket):
                     game_state.complete_history.append(action)
                     print(f"Action received: {action}, complete history length: {len(game_state.complete_history)}")
                     
+                    # Convert action to markov state and add to tracker
+                    if action in ['b2', 'b3', 'b5', 'r2', 'r3', 'r5']:
+                        markov_state = MarkovGameState(action)
+                        game_state.markov_tracker.add_possession(markov_state)
+                    
                     # Handle scoring
                     if action == 'g_b':  # Blue goal
+                        game_state.markov_tracker.score_goal(Team.BLUE)
                         game_state.blue_score += 1
                         # Reset recent history and start at Red 5-bar
                         game_state.possession_history = ['r5']
@@ -229,6 +285,7 @@ async def websocket_endpoint(websocket: WebSocket):
                             game_state.blue_score = 0
                             game_state.red_score = 0
                     elif action == 'g_r':  # Red goal
+                        game_state.markov_tracker.score_goal(Team.RED)
                         game_state.red_score += 1
                         # Reset recent history and start at Blue 5-bar
                         game_state.possession_history = ['b5']
