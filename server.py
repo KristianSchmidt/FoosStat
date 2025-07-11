@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 import asyncio
 import json
+import logging
 import uuid
+import os
+import glob
 from typing import Dict, List, Optional
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Form
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from analytics import AnalyticsEngine
 from markov_analytics import LiveGameTracker, Team, GameState as MarkovGameState
 import bleach
@@ -306,6 +309,101 @@ async def websocket_endpoint(websocket: WebSocket):
                 
     except WebSocketDisconnect:
         connected_websockets.remove(websocket)
+
+@app.get("/available-games")
+async def get_available_games():
+    """Get list of available pre-played games"""
+    games = []
+    try:
+        for filepath in glob.glob("games/*.txt"):
+            filename = os.path.basename(filepath)
+            # Create a display name from the filename
+            display_name = filename.replace(".txt", "").replace("_", " ").title()
+            games.append({
+                "filename": filename,
+                "display_name": display_name
+            })
+    except Exception as e:
+        print(f"Error loading games: {e}")
+    
+    return JSONResponse(games)
+
+@app.post("/load-game")
+async def load_game(request: dict):
+    """Load a pre-played game from file"""
+    try:
+        filename = request.get("filename")
+        if not filename:
+            return JSONResponse({"error": "No filename provided"}, status_code=400)
+        
+        filepath = os.path.join("games", filename)
+        if not os.path.exists(filepath):
+            return JSONResponse({"error": "Game file not found"}, status_code=404)
+        
+        # Parse the game file
+        with open(filepath, "r") as f:
+            lines = f.readlines()
+        
+        # Reset game state
+        game_state.reset()
+        
+        # Set default names based on filename patterns
+        if "hannibal" in filename.lower():
+            game_state.red_player1 = "Sven Wonsyld"
+            game_state.blue_player1 = "Hannibal Keblovski"
+        elif "mathias" in filename.lower():
+            game_state.red_player1 = "Mathias Møller"
+            game_state.blue_player1 = "Frederic Collignon"
+        else:
+            game_state.red_player1 = "Red Team"
+            game_state.blue_player1 = "Blue Team"
+        
+        # Process each line
+        for line in lines:
+            line = line.strip()
+            if not line or line.startswith("set "):
+                continue
+                
+            # Parse possession line
+            possessions = line.split(",")
+            for possession in possessions:
+                possession = possession.strip()
+                if possession:
+                    game_state.complete_history.append(possession)
+                    game_state.possession_history.append(possession)
+                    
+                    # Update scores based on goals
+                    if possession == "g_r":
+                        game_state.red_score += 1
+                    elif possession == "g_b":
+                        game_state.blue_score += 1
+                    
+                    # Check for set completion (assuming 5 points per set)
+                    if game_state.red_score >= 5:
+                        game_state.red_sets += 1
+                        game_state.red_score = 0
+                        game_state.blue_score = 0
+                    elif game_state.blue_score >= 5:
+                        game_state.blue_sets += 1
+                        game_state.red_score = 0
+                        game_state.blue_score = 0
+        
+        # Update markov tracker with complete history
+        for possession in game_state.complete_history:
+            logging.info(f"Adding possession to Markov tracker: {possession}")
+            if possession in ["b2", "b3", "b5", "r2", "r3", "r5"]:
+                markov_state = MarkovGameState(possession)
+                game_state.markov_tracker.add_possession(markov_state)
+            elif possession == "g_b":
+                game_state.markov_tracker.score_goal(Team.BLUE)
+            elif possession == "g_r":
+                game_state.markov_tracker.score_goal(Team.RED)
+        
+        return JSONResponse({"redirect_url": "/game"})
+        
+    except Exception as e:
+        print(f"Error loading game: {e}")
+        return JSONResponse({"error": "Error loading game"}, status_code=500)
 
 @app.get("/", response_class=HTMLResponse)
 async def get_splash():

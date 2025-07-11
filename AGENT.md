@@ -5,6 +5,9 @@
 - **Install deps**: `uv sync`
 - **Run analytics**: `uv run foos.py` (analyze game data from data.txt)
 
+## Operating system
+- The development of this program is on Windows with Powershell, so keep that in mind when making commands as an agent.
+
 ## Architecture
 - **Main Python app**: FastAPI server (`server.py`) with WebSocket support for real-time foosball scoring
 - **Frontend**: HTMX-based HTML templates for responsive UI (`splash.html`, `foosball_game_template.html`)
