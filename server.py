@@ -198,8 +198,9 @@ async def broadcast_score_update():
                             <span class="text-red-600 font-mono">{red_name}</span>
                             <span class="text-blue-600 font-mono">{blue_name}</span>
                         </div>
-                        <div class="bg-gray-200 rounded-full h-6 mb-2">
-                            <div class="bg-blue-500 h-6 rounded-full" style="width: {markov_probs['set_win_prob_blue']*100:.1f}%"></div>
+                        <div class="bg-blue-500 rounded-full h-6 mb-2 flex">
+                            <div class="bg-red-500 h-6 rounded-l-full" style="width: {markov_probs['set_win_prob_red']*100:.1f}%"></div>
+                            <div class="bg-blue-500 h-6 rounded-r-full" style="width: {markov_probs['set_win_prob_blue']*100:.1f}%"></div>
                         </div>
                         <div class="flex justify-between text-sm">
                             <span class="text-red-600">{markov_probs['set_win_prob_red']*100:.1f}%</span>
@@ -215,8 +216,9 @@ async def broadcast_score_update():
                             <span class="text-red-600 font-mono">{red_name}</span>
                             <span class="text-blue-600 font-mono">{blue_name}</span>
                         </div>
-                        <div class="bg-gray-200 rounded-full h-6 mb-2">
-                            <div class="bg-blue-500 h-6 rounded-full" style="width: {markov_probs['game_win_prob_blue']*100:.1f}%"></div>
+                        <div class="bg-blue-500 rounded-full h-6 mb-2 flex">
+                            <div class="bg-red-500 h-6 rounded-l-full" style="width: {markov_probs['game_win_prob_red']*100:.1f}%"></div>
+                            <div class="bg-blue-500 h-6 rounded-r-full" style="width: {markov_probs['game_win_prob_blue']*100:.1f}%"></div>
                         </div>
                         <div class="flex justify-between text-sm">
                             <span class="text-red-600">{markov_probs['game_win_prob_red']*100:.1f}%</span>
