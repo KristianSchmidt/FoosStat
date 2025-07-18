@@ -13,6 +13,7 @@ from analytics import AnalyticsEngine
 from markov_analytics import LiveGameTracker, Team, GameState as MarkovGameState
 import bleach
 from domain.models import GameState, Action, GameMode
+from domain.services import broadcast_service
 
 app = FastAPI()
 
@@ -21,12 +22,9 @@ app = FastAPI()
 # Global game state
 game_state = GameState()
 
-# Connected websockets
-connected_websockets: List[WebSocket] = []
-
 async def broadcast_score_update():
     """Broadcast current score to all connected clients"""
-    if not connected_websockets:
+    if broadcast_service.get_connection_count(game_state.game_id) == 0:
         return
         
     red_name = game_state.get_red_display_name()
@@ -188,23 +186,14 @@ async def broadcast_score_update():
     
     message = score_html + history_html + stats_html + markov_html
     
-    disconnected = []
-    for websocket in connected_websockets:
-        try:
-            await websocket.send_text(message)
-            print(f"Sent message to WebSocket: {len(message)} characters")
-        except Exception as e:
-            print(f"Failed to send to WebSocket: {e}")
-            disconnected.append(websocket)
-    
-    # Remove disconnected websockets
-    for ws in disconnected:
-        connected_websockets.remove(ws)
+    # Send to all websockets connected to this game
+    sent_count = await broadcast_service.send_to_game(message, game_state.game_id)
+    print(f"Broadcasted score update to {sent_count} clients")
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    connected_websockets.append(websocket)
+    await broadcast_service.connect(websocket, game_state.game_id)
     
     # Send initial game ID and score
     await broadcast_score_update()
@@ -251,7 +240,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 continue
                 
     except WebSocketDisconnect:
-        connected_websockets.remove(websocket)
+        await broadcast_service.disconnect(websocket, game_state.game_id)
 
 @app.get("/available-games")
 async def get_available_games():
