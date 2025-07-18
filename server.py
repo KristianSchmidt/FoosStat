@@ -12,59 +12,11 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from analytics import AnalyticsEngine
 from markov_analytics import LiveGameTracker, Team, GameState as MarkovGameState
 import bleach
+from domain.models import GameState, Action, GameMode
 
 app = FastAPI()
 
 # Store game state
-class GameState:
-    def __init__(self):
-        self.game_id = str(uuid.uuid4())
-        self.blue_score = 0
-        self.red_score = 0
-        self.blue_sets = 0
-        self.red_sets = 0
-        self.possession_history: List[str] = []  # For UI display (recent possessions)
-        self.complete_history: List[str] = []    # Complete game history for analytics
-        self.game_mode = "singles"
-        self.red_player1 = "Red"
-        self.red_player2: Optional[str] = None
-        self.blue_player1 = "Blue"
-        self.blue_player2: Optional[str] = None
-        self.markov_tracker = LiveGameTracker()
-        
-    def reset(self):
-        self.game_id = str(uuid.uuid4())
-        self.blue_score = 0
-        self.red_score = 0
-        self.blue_sets = 0
-        self.red_sets = 0
-        self.possession_history = []
-        self.complete_history = []
-        self.markov_tracker = LiveGameTracker()
-        
-    def get_red_display_name(self):
-        """Get last name for red team display"""
-        if self.game_mode == "singles":
-            return self.red_player1.split()[-1] if self.red_player1 else "Red"
-        else:
-            names = []
-            if self.red_player1:
-                names.append(self.red_player1.split()[-1])
-            if self.red_player2:
-                names.append(self.red_player2.split()[-1])
-            return "/".join(names) if names else "Red"
-    
-    def get_blue_display_name(self):
-        """Get last name for blue team display"""
-        if self.game_mode == "singles":
-            return self.blue_player1.split()[-1] if self.blue_player1 else "Blue"
-        else:
-            names = []
-            if self.blue_player1:
-                names.append(self.blue_player1.split()[-1])
-            if self.blue_player2:
-                names.append(self.blue_player2.split()[-1])
-            return "/".join(names) if names else "Blue"
 
 # Global game state
 game_state = GameState()
@@ -267,39 +219,30 @@ async def websocket_endpoint(websocket: WebSocket):
                 action = message.get('action')
                 
                 if action:
-                    # Add to both possession histories
-                    game_state.possession_history.append(action)
-                    game_state.complete_history.append(action)
-                    print(f"Action received: {action}, complete history length: {len(game_state.complete_history)}")
-                    
-                    # Convert action to markov state and add to tracker
-                    if action in ['b2', 'b3', 'b5', 'r2', 'r3', 'r5']:
-                        markov_state = MarkovGameState(action)
-                        game_state.markov_tracker.add_possession(markov_state)
-                    
-                    # Handle scoring
-                    if action == 'g_b':  # Blue goal
-                        game_state.markov_tracker.score_goal(Team.BLUE)
-                        game_state.blue_score += 1
-                        # Reset recent history and start at Red 5-bar
-                        game_state.possession_history = ['r5']
-                        # Add kickoff to complete history too
-                        game_state.complete_history.append('r5')
-                        if game_state.blue_score >= 5:
-                            game_state.blue_sets += 1
-                            game_state.blue_score = 0
-                            game_state.red_score = 0
-                    elif action == 'g_r':  # Red goal
-                        game_state.markov_tracker.score_goal(Team.RED)
-                        game_state.red_score += 1
-                        # Reset recent history and start at Blue 5-bar
-                        game_state.possession_history = ['b5']
-                        # Add kickoff to complete history too
-                        game_state.complete_history.append('b5')
-                        if game_state.red_score >= 5:
-                            game_state.red_sets += 1
-                            game_state.blue_score = 0
-                            game_state.red_score = 0
+                    try:
+                        # Validate action using enum
+                        parsed_action = Action(action)
+                        
+                        # Add to both possession histories
+                        game_state.add_possession(parsed_action)
+                        print(f"Action received: {action}, complete history length: {len(game_state.complete_history)}")
+                        
+                        # Convert action to markov state and add to tracker
+                        if parsed_action in [Action.B2, Action.B3, Action.B5, Action.R2, Action.R3, Action.R5]:
+                            markov_state = MarkovGameState(action)
+                            game_state.markov_tracker.add_possession(markov_state)
+                        
+                        # Handle scoring
+                        if parsed_action == Action.BLUE_GOAL:
+                            game_state.markov_tracker.score_goal(Team.BLUE)
+                            game_state.goal_scored("blue")
+                        elif parsed_action == Action.RED_GOAL:
+                            game_state.markov_tracker.score_goal(Team.RED)
+                            game_state.goal_scored("red")
+                            
+                    except ValueError:
+                        print(f"Invalid action received: {action}")
+                        continue
                     
                     # Broadcast updated score to all clients
                     await broadcast_score_update()
@@ -419,7 +362,7 @@ async def start_game(
     blue_player2: str = Form("")
 ):
     # Update game state with player info
-    game_state.game_mode = game_mode
+    game_state.game_mode = GameMode(game_mode)
     game_state.red_player1 = bleach.clean(red_player1.strip())
     game_state.blue_player1 = bleach.clean(blue_player1.strip())
     game_state.red_player2 = bleach.clean(red_player2.strip()) if red_player2.strip() else None
