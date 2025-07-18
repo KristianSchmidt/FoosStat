@@ -10,6 +10,9 @@ dependencies = [
     "mypy>=1.16.1",
     "numpy>=2.2.6",
     "python-multipart>=0.0.20",
+    "types-bleach>=6.2.0.20250514",
+    "types-pyyaml>=6.0.12.20250516",
+    "types-ujson>=5.10.0.20250326",
     "uvicorn[standard]>=0.34.2",
     "websockets>=15.0.1",
 ]
